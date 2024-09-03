@@ -17,9 +17,11 @@
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
-    - [Import Module](#import-module)
-    - [Auth Guard without Role](#auth-guard-without-role)
-    - [Auth Guard with Role](#auth-guard-with-role)
+  - [Import the Module](#import-the-module)
+  - [Parameter Options](#parameter-options)
+  - [Auth Guard Without Role Validation](#auth-guard-without-role-validation)
+  - [Auth Guard With Role Validation](#auth-guard-with-role-validation)
+  - [Additional Information](#additional-information)
 - [Resources](#resources)
 - [Stay in touch](#stay-in-touch)
 - [License](#license)
@@ -31,8 +33,8 @@ $ npm i @alpha018/nestjs-firebase-auth
 
 ## Usage
 
-### Import Module
-Import the module in your main module
+### Import The Module
+To use Firebase authentication in your application, import the module into your main module.
 ```ts
 import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
 
@@ -42,14 +44,14 @@ import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
       FirebaseAdminModule.forRootAsync({
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => ({
-          // you only need to choose one of the two options base64 or firebase option
-          base64: configService.get('FIREBASE_SERVICE_ACCOUNT_BASE64'), // service account json string in base 64
-          options: '',
+          // SELECT ONLY ONE: BASE64 OR OPTIONS (Firebase Options)!
+          base64: configService.get('FIREBASE_SERVICE_ACCOUNT_BASE64'), // Base64 encoded service account JSON string
+          options: {}, // Use this if not using base64
           auth: {
             config: {
-              extractor: ExtractJwt.fromAuthHeaderAsBearerToken(), // you can choose your extractor from passport lib
-              checkRevoked: true, // if you need to check revoked token from firebase set this param in true
-              validateRole: true, // if you need to validate role from firebase set this param in true
+              extractor: ExtractJwt.fromAuthHeaderAsBearerToken(), // Choose your extractor from the Passport library
+              checkRevoked: true, // Set to true if you want to check for revoked Firebase tokens
+              validateRole: true, // Set to true if you want to validate user roles
             },
           },
         }),
@@ -59,26 +61,60 @@ import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
   ],
 })
 ```
+## Parameter Options
 
-### Auth Guard without Role
-Use the Auth Guard in your controller without role based
+| Parameter                      | Type         | Required | Description                                                                                         |
+|--------------------------------|--------------|----------|-----------------------------------------------------------------------------------------------------|
+| `base64`                       | `string`     | Yes*     | Base64 encoded service account JSON string. Required if `options` is not provided.                  |
+| `options`                      | `object`     | Yes*     | Firebase Admin SDK configuration options. Required if `base64` is not provided.                     |
+| `auth.config.extractor`        | `function`   | Optional | A custom extractor function from the Passport library to extract the token from the request.        |
+| `auth.config.checkRevoked`     | `boolean`    | Optional | Set to `true` to check if the Firebase token has been revoked. Defaults to `false`.                 |
+| `auth.config.validateRole`     | `boolean`    | Optional | Set to `true` to validate user roles using Firebase custom claims. Defaults to `false`.             |
+
+
+### Auth Guard Without Role Validation
+To protect an endpoint without validating user roles, use the Auth Guard to ensure the Firebase user's token is valid.
 ```ts
 export class AppController {
   constructor(
     private readonly firebaseService: FirebaseProvider,
   ) {}
 
-  @UseGuards(FirebaseGuard) // this line protect your endpoint and depending of the parameter validateRole, validate the role of the user
+  @UseGuards(FirebaseGuard) // This line protects your endpoint. If `validateRole` is enabled, it also validates the user's role.
   @Get()
   mainFunction() {
-    return 'hola mundo';
+    return 'Hello World';
   }
 }
 ```
 
-### Auth Guard with Role
+### Auth Guard With Role Validation
 
-Use the Auth Guard in your controller with role based
+To enforce role-based access control, you need to set custom claims in Firebase. Here's how you can set custom claims:
+```ts
+enum Roles {
+  ADMIN,
+  USER,
+}
+
+@Controller('')
+export class AppController implements OnModuleInit {
+  constructor(
+    private readonly firebaseService: FirebaseProvider,
+  ) {}
+
+  @Get()
+  async setClaims() {
+    await this.firebaseService.setClaimsRoleBase<Roles>(
+      'FirebaseUID',
+      [Roles.ADMIN, ...]
+    );
+    return { status: 'ok' }
+  }
+}
+```
+
+Then, use the Auth Guard with role validation to check if a user has the necessary permissions to access an endpoint:
 ```ts
 enum Roles {
   ADMIN,
@@ -91,11 +127,36 @@ export class AppController {
     private readonly firebaseService: FirebaseProvider,
   ) {}
 
-  @RolesGuard(Roles.ADMIN, Roles.USER) // this line protect your endpoint reading the custom claims of firebase user
-  @UseGuards(FirebaseGuard) // this line protect your endpoint and depending of the parameter validateRole, validate the role of the user
+  @RolesGuard(Roles.ADMIN, Roles.USER) // This line checks the custom claims of the Firebase user to protect the endpoint
+  @UseGuards(FirebaseGuard) // This line protects your endpoint and, if `validateRole` is enabled, validates the user's role
   @Get()
   mainFunction() {
     return 'Hello World';
+  }
+}
+```
+
+### Additional Information
+
+To retrieve user claims, use the following example:
+```ts
+enum Roles {
+  ADMIN,
+  USER,
+}
+
+@Controller('')
+export class AppController {
+  constructor(
+    private readonly firebaseService: FirebaseProvider,
+  ) {}
+
+  @Get()
+  async mainFunction() {
+    const claims = await this.firebaseService.getClaimsRoleBase<Roles>(
+      'FirebaseUID',
+    );
+    return claims; // This returns an array of the user's claims
   }
 }
 ```
