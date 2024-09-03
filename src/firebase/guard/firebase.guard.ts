@@ -1,7 +1,12 @@
 import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
 import { FirebaseProvider } from '../provider/firebase.provider';
 import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
-import { FIREBASE_ADMIN_CONFIG, FIREBASE_APP_ROLES_DECORATOR } from '../constant/firebase.constant';
+import {
+  FIREBASE_ADMIN_CONFIG,
+  FIREBASE_APP_ROLES_DECORATOR,
+  FIREBASE_CLAIMS_USER_METADATA,
+  FIREBASE_TOKEN_USER_METADATA,
+} from '../constant/firebase.constant';
 import { ExtractJwt } from 'passport-jwt';
 import { Reflector } from '@nestjs/core';
 import { DecodedIdToken } from 'firebase-admin/lib/auth';
@@ -34,6 +39,13 @@ export class FirebaseGuard implements CanActivate {
       return false;
     }
 
+    request['metadata'] = {
+      ...request['metadata'],
+      [FIREBASE_TOKEN_USER_METADATA]: {
+        user: decodedToken,
+      },
+    };
+
     if (!this.config.auth?.config?.validateRole) {
       return true;
     }
@@ -45,6 +57,14 @@ export class FirebaseGuard implements CanActivate {
     }
 
     const claims = await this.firebaseProvider.getClaimsRoleBase(decodedToken.uid);
+
+    request['metadata'] = {
+      ...request['metadata'],
+      [FIREBASE_CLAIMS_USER_METADATA]: {
+        claims: claims,
+      },
+    };
+
     const requiredRoles = new Set(roles);
     return claims?.some((role) => requiredRoles.has(role));
   }

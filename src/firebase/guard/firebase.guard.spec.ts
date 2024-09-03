@@ -75,7 +75,6 @@ describe('FirebaseGuard', () => {
     it('should return true if validateRole is false', async () => {
       request.headers.authorization = bearerToken;
       firebaseProvider.auth.verifyIdToken.mockResolvedValue({} as DecodedIdToken);
-      // Configurar validateRole como false
       (guard as any).config.auth = { config: { validateRole: false } };
 
       const result = await guard.canActivate(context);

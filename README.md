@@ -28,7 +28,7 @@
 
 ## Installation
 ```bash
-$ npm i @alpha018/nestjs-firebase-auth
+$ npm i @alpha018/nestjs-firebase-auth firebase-admin
 ```
 
 ## Usage
@@ -75,9 +75,11 @@ import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
 ### Auth Guard Without Role Validation
 To protect an endpoint without validating user roles, use the Auth Guard to ensure the Firebase user's token is valid.
 ```ts
+import { FirebaseGuard, FirebaseProvider } from '@alpha018/nestjs-firebase-auth';
+
 export class AppController {
   constructor(
-    private readonly firebaseService: FirebaseProvider,
+    private readonly firebaseProvider: FirebaseProvider,
   ) {}
 
   @UseGuards(FirebaseGuard) // This line protects your endpoint. If `validateRole` is enabled, it also validates the user's role.
@@ -92,6 +94,8 @@ export class AppController {
 
 To enforce role-based access control, you need to set custom claims in Firebase. Here's how you can set custom claims:
 ```ts
+import { FirebaseProvider } from '@alpha018/nestjs-firebase-auth';
+
 enum Roles {
   ADMIN,
   USER,
@@ -100,12 +104,12 @@ enum Roles {
 @Controller('')
 export class AppController implements OnModuleInit {
   constructor(
-    private readonly firebaseService: FirebaseProvider,
+    private readonly firebaseProvider: FirebaseProvider,
   ) {}
 
   @Get()
   async setClaims() {
-    await this.firebaseService.setClaimsRoleBase<Roles>(
+    await this.firebaseProvider.setClaimsRoleBase<Roles>(
       'FirebaseUID',
       [Roles.ADMIN, ...]
     );
@@ -116,6 +120,7 @@ export class AppController implements OnModuleInit {
 
 Then, use the Auth Guard with role validation to check if a user has the necessary permissions to access an endpoint:
 ```ts
+import { FirebaseGuard, FirebaseProvider, RolesGuard } from '@alpha018/nestjs-firebase-auth';
 enum Roles {
   ADMIN,
   USER,
@@ -124,7 +129,7 @@ enum Roles {
 @Controller('')
 export class AppController {
   constructor(
-    private readonly firebaseService: FirebaseProvider,
+    private readonly firebaseProvider: FirebaseProvider,
   ) {}
 
   @RolesGuard(Roles.ADMIN, Roles.USER) // This line checks the custom claims of the Firebase user to protect the endpoint
@@ -140,6 +145,8 @@ export class AppController {
 
 To retrieve user claims, use the following example:
 ```ts
+import { FirebaseProvider } from '@alpha018/nestjs-firebase-auth';
+
 enum Roles {
   ADMIN,
   USER,
@@ -148,15 +155,51 @@ enum Roles {
 @Controller('')
 export class AppController {
   constructor(
-    private readonly firebaseService: FirebaseProvider,
+    private readonly firebaseProvider: FirebaseProvider,
   ) {}
 
   @Get()
   async mainFunction() {
-    const claims = await this.firebaseService.getClaimsRoleBase<Roles>(
+    const claims = await this.firebaseProvider.getClaimsRoleBase<Roles>(
       'FirebaseUID',
     );
     return claims; // This returns an array of the user's claims
+  }
+}
+```
+
+To retrieve Decode ID Token and Claims, use the following example:
+```ts
+import {
+  FirebaseGuard,
+  FirebaseProvider, FirebaseUser, FirebaseUserClaims,
+  RolesGuard,
+} from '@alpha018/nestjs-firebase-auth';
+
+import { auth } from 'firebase-admin';
+
+enum Roles {
+  ADMIN,
+  USER,
+}
+
+@Controller('')
+export class AppController {
+  constructor(
+    private readonly firebaseProvider: FirebaseProvider,
+  ) {}
+
+  @RolesGuard(Roles.ADMIN, Roles.USER)
+  @UseGuards(FirebaseGuard)
+  @Get()
+  async mainFunction(
+    @FirebaseUser() user: auth.DecodedIdToken,
+    @FirebaseUserClaims() claims: Roles[],
+  ) {
+    return {
+      user,
+      claims
+    };
   }
 }
 ```
