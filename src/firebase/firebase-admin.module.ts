@@ -65,7 +65,6 @@ export class FirebaseAdminModule {
         config: FirebaseConstructorInterface,
         reflector: Reflector,
       ) => {
-        console.log(reflector);
         return new FirebaseGuard(firebaseProvider, config, reflector);
       },
       inject: [FirebaseProvider, FIREBASE_ADMIN_MODULE_OPTIONS, Reflector],
