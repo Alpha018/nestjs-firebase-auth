@@ -1,6 +1,6 @@
 {
   "name": "@alpha018/nestjs-firebase-auth",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "NestJS Firebase library and Role based guard for authentication with some utils functions",
   "author": "Tomás Alegre <tomas.sa467@gmail.com>",
   "readmeFilename": "README.md",

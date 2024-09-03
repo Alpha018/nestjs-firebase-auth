@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.0.0...v1.1.0) (2024-09-03)
+
+
+### Features
+
+* **workflow:** add build step to GitHub Actions workflow ([125c990](https://github.com/Alpha018/nestjs-firebase-auth/commit/125c990c295be360596047a56a8b79f8c3ed4eae))
+
 # 1.0.0 (2024-09-03)
 
 
