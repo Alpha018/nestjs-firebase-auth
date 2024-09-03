@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.1.1...v1.2.0) (2024-09-03)
+
+
+### Features
+
+* **firebase:** enhance Firebase integration with improved decorators and guards ([3d9bf45](https://github.com/Alpha018/nestjs-firebase-auth/commit/3d9bf45d85e11a3eade6cf94174923aca949b351))
+
 ## [1.1.1](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.1.0...v1.1.1) (2024-09-03)
 
 
