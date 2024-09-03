@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.1.0...v1.1.1) (2024-09-03)
+
+
+### Bug Fixes
+
+* remove debug console log from FirebaseAdminModule ([235fa08](https://github.com/Alpha018/nestjs-firebase-auth/commit/235fa08e49bd74c3d9d2de7f7520ec840fdb6c93))
+
 # [1.1.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.0.0...v1.1.0) (2024-09-03)
 
 
