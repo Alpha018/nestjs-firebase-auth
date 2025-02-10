@@ -1,3 +1,15 @@
+# [1.3.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.2.0...v1.3.0) (2025-02-10)
+
+
+### Bug Fixes
+
+* **README:** correct injection token for ticket service configuration ([7545f28](https://github.com/Alpha018/nestjs-firebase-auth/commit/7545f28765180c6db764e6e891084a9402d9b30a))
+
+
+### Features
+
+* **ci:** enhance GitHub Actions and introduce e2e tests ([63e15df](https://github.com/Alpha018/nestjs-firebase-auth/commit/63e15df01abdd8038f065d67384dc91838d11201))
+
 # [1.2.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.1.1...v1.2.0) (2024-09-03)
 
 
