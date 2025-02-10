@@ -34,7 +34,6 @@ export class FirebaseGuard implements CanActivate {
         token,
         this.config.auth?.config?.checkRevoked || false,
       );
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return false;
     }

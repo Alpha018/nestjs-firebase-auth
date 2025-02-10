@@ -1,7 +1,7 @@
-name: Build with Semantic-Release
+name: CI
 
 on:
-  push:
+  pull_request:
     branches:
       - main
 
@@ -35,33 +35,3 @@ jobs:
 
       - name: Run e2e tests
         run: npm run test:e2e
-
-  release:
-    runs-on: ubuntu-latest
-    needs:
-      - test
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.CI_GITHUB_PAT }}
-          persist-credentials: true
-          fetch-depth: 0
-
-      - name: environment
-        uses: actions/setup-node@v3
-        with:
-          cache: npm
-          node-version: 20
-
-      - name: install dependencies
-        run: npm ci
-
-      - name: build project
-        run: npm run build
-
-      - name: Semantic Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release
