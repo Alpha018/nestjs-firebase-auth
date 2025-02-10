@@ -11,6 +11,11 @@ jobs:
     strategy:
       matrix:
         node-version: [ 18.x, 20.x ]
+    env:
+      FIREBASE_TEST_USER: ${{ secrets.FIREBASE_TEST_USER }}
+      FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+      FIREBASE_CLIENT_BASE64: ${{ secrets.FIREBASE_CLIENT_BASE64 }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -22,13 +27,6 @@ jobs:
 
       - name: install dependencies
         run: npm ci
-
-      - name: Set environment variables
-        env:
-          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
-          FIREBASE_CLIENT_BASE64: ${{ secrets.FIREBASE_CLIENT_BASE64 }}
-          FIREBASE_TEST_USER: ${{ secrets.FIREBASE_TEST_USER }}
-        run: echo "Environment variables set"
 
       - name: Run tests
         run: npm run test
