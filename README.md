@@ -55,7 +55,7 @@ import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
             },
           },
         }),
-        inject: [TicketServiceConfig],
+        inject: [ConfigService],
       }),
     ...
   ],
