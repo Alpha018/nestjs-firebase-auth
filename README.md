@@ -52,6 +52,7 @@ import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
               extractor: ExtractJwt.fromAuthHeaderAsBearerToken(), // Choose your extractor from the Passport library
               checkRevoked: true, // Set to true if you want to check for revoked Firebase tokens
               validateRole: true, // Set to true if you want to validate user roles
+              useLocalRoles: true, // Set to true if you want to validate user roles locally without firebase call
             },
           },
         }),
@@ -63,13 +64,14 @@ import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
 ```
 ## Parameter Options
 
-| Parameter                      | Type         | Required | Description                                                                                         |
-|--------------------------------|--------------|----------|-----------------------------------------------------------------------------------------------------|
-| `base64`                       | `string`     | Yes*     | Base64 encoded service account JSON string. Required if `options` is not provided.                  |
-| `options`                      | `object`     | Yes*     | Firebase Admin SDK configuration options. Required if `base64` is not provided.                     |
-| `auth.config.extractor`        | `function`   | Optional | A custom extractor function from the Passport library to extract the token from the request.        |
-| `auth.config.checkRevoked`     | `boolean`    | Optional | Set to `true` to check if the Firebase token has been revoked. Defaults to `false`.                 |
-| `auth.config.validateRole`     | `boolean`    | Optional | Set to `true` to validate user roles using Firebase custom claims. Defaults to `false`.             |
+| Parameter                   | Type       | Required | Description                                                                                                                                                                                                               |
+|-----------------------------|------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `base64`                    | `string`   | Yes*     | Base64 encoded service account JSON string. Required if `options` is not provided.                                                                                                                                        |
+| `options`                   | `object`   | Yes*     | Firebase Admin SDK configuration options. Required if `base64` is not provided.                                                                                                                                           |
+| `auth.config.extractor`     | `function` | Optional | A custom extractor function from the Passport library to extract the token from the request.                                                                                                                              |
+| `auth.config.checkRevoked`  | `boolean`  | Optional | Set to `true` to check if the Firebase token has been revoked. Defaults to `false`.                                                                                                                                       |
+| `auth.config.validateRole`  | `boolean`  | Optional | Set to `true` to validate user roles using Firebase custom claims. Defaults to `false`.                                                                                                                                   |
+| `auth.config.useLocalRoles` | `boolean`  | Optional | Set to `true` to validate user roles using local custom claims inside the JWT token. Defaults to `false`. **Note:** If you update the claims, previously issued tokens may still contain outdated roles and remain valid. |
 
 
 ### Auth Guard Without Role Validation

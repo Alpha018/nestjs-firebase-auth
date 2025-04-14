@@ -4,4 +4,5 @@ export interface FirebaseAuthStrategyOptions {
   extractor?: JwtFromRequestFunction;
   checkRevoked?: boolean;
   validateRole?: boolean;
+  useLocalRoles?: boolean;
 }

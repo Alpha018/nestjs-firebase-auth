@@ -55,7 +55,10 @@ export class FirebaseGuard implements CanActivate {
       return true;
     }
 
-    const claims = await this.firebaseProvider.getClaimsRoleBase(decodedToken.uid);
+    const claims = await this.firebaseProvider.getClaimsRoleBase(
+      decodedToken,
+      this.config.auth?.config?.useLocalRoles || false,
+    );
 
     request['metadata'] = {
       ...request['metadata'],

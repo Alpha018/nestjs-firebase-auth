@@ -4,6 +4,8 @@ import { FirebaseProvider } from './firebase.provider';
 import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
 import { getAuth } from 'firebase-admin/auth';
 import * as fa from 'firebase-admin';
+import { userDecode } from '../__mocks__/firebase-user-mock';
+import { DecodedIdToken } from 'firebase-admin/lib/auth';
 
 jest.mock('firebase-admin/app', () => ({
   initializeApp: jest.fn(),
@@ -117,24 +119,31 @@ describe('FirebaseProvider', () => {
 
   describe('getClaimsRoleBase', () => {
     it('should get custom user claims', async () => {
-      const uid = 'test-uid';
+      const user = userDecode as any as DecodedIdToken;
       const claims = ['admin'];
       mockAuth.getUser.mockResolvedValue({
         customClaims: { roles: claims },
       });
 
-      const result = await provider.getClaimsRoleBase(uid);
+      const result = await provider.getClaimsRoleBase(user, true);
       expect(result).toEqual(claims);
+
+      const localResult = await provider.getClaimsRoleBase(user, false);
+      expect(localResult).toEqual(claims);
     });
 
     it('should return undefined if no custom claims', async () => {
-      const uid = 'test-uid';
+      const user = userDecode as any as DecodedIdToken;
+      user.roles = undefined;
       mockAuth.getUser.mockResolvedValue({
         customClaims: undefined,
       });
 
-      const result = await provider.getClaimsRoleBase(uid);
+      const result = await provider.getClaimsRoleBase(user, true);
       expect(result).toBeUndefined();
+
+      const localResult = await provider.getClaimsRoleBase(user, false);
+      expect(localResult).toBeUndefined();
     });
   });
 });
