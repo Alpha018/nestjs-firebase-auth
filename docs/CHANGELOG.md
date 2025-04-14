@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.3.0...v1.4.0) (2025-04-14)
+
+
+### Features
+
+* **firebase:** add local role validation feature ([dbfc40c](https://github.com/Alpha018/nestjs-firebase-auth/commit/dbfc40c1185ab286739e1abf6da1b8019969cb09))
+
 # [1.3.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.2.0...v1.3.0) (2025-02-10)
 
 
