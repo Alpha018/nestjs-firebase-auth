@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.4.0...v1.5.0) (2025-07-14)
+
+
+### Features
+
+* **workflows:** remove Node.js 18.x from test and build matrix and force release ([55b1989](https://github.com/Alpha018/nestjs-firebase-auth/commit/55b1989332817c4779dc60c19b90e55ac2a0d40b))
+
 # [1.4.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.3.0...v1.4.0) (2025-04-14)
 
 
