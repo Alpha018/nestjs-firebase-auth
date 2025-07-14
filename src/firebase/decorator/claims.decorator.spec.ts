@@ -1,16 +1,17 @@
 import { ExecutionContext } from '@nestjs/common';
-import { ClaimsFactory } from './claims.decorator';
+
 import { FIREBASE_CLAIMS_USER_METADATA } from '../constant/firebase.constant';
+import { ClaimsFactory } from './claims.decorator';
 
 const mockExecutionContext: ExecutionContext = {
-  getType: jest.fn(),
   getArgByIndex: jest.fn(),
-  getArgs: jest.fn(),
-  getClass: jest.fn(),
-  getHandler: jest.fn(),
   switchToHttp: jest.fn(),
   switchToRpc: jest.fn(),
+  getHandler: jest.fn(),
   switchToWs: jest.fn(),
+  getClass: jest.fn(),
+  getType: jest.fn(),
+  getArgs: jest.fn(),
 };
 
 describe('Firebase Claims Decorator - Unit Test', () => {

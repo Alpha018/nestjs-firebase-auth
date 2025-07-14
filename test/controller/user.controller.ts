@@ -1,8 +1,9 @@
-import { Body, Controller, Get, HttpCode, Post, UseGuards } from '@nestjs/common';
-import { FirebaseProvider, FirebaseUserClaims, RolesGuard } from '../../src';
+import { Controller, UseGuards, HttpCode, Body, Post, Get } from '@nestjs/common';
+import { DecodedIdToken } from 'firebase-admin/lib/auth';
+
+import { FirebaseUserClaims, FirebaseProvider, RolesGuard } from '../../src';
 import { FirebaseGuard } from '../../src';
 import { FirebaseUser } from '../../src';
-import { DecodedIdToken } from 'firebase-admin/lib/auth';
 
 export enum Roles {
   ADMIN,
@@ -27,23 +28,23 @@ export class UsersController {
     return { accessToken: token };
   }
 
-  @UseGuards(FirebaseGuard)
-  @Get('me')
-  getMe(@FirebaseUser() user: DecodedIdToken) {
-    return user;
-  }
-
   @Post('set-claims')
   @HttpCode(200)
-  async setClaims(@Body() body: { uid: string; claim: Roles }) {
+  async setClaims(@Body() body: { claim: Roles; uid: string; }) {
     await this.firebaseProvider.setClaimsRoleBase<Roles>(body.uid, [body.claim]);
     return { status: 'ok' };
   }
 
-  @RolesGuard(Roles.ADMIN)
   @UseGuards(FirebaseGuard)
+  @RolesGuard(Roles.ADMIN)
   @Get('get-claims')
   async getClaims(@FirebaseUserClaims() claims: Roles[]) {
     return { ...claims };
+  }
+
+  @UseGuards(FirebaseGuard)
+  @Get('me')
+  getMe(@FirebaseUser() user: DecodedIdToken) {
+    return user;
   }
 }

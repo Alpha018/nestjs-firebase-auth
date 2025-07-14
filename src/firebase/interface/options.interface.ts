@@ -2,7 +2,7 @@ import { JwtFromRequestFunction } from 'passport-jwt';
 
 export interface FirebaseAuthStrategyOptions {
   extractor?: JwtFromRequestFunction;
+  useLocalRoles?: boolean;
   checkRevoked?: boolean;
   validateRole?: boolean;
-  useLocalRoles?: boolean;
 }

@@ -1,12 +1,13 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import * as request from 'supertest';
+import { signInWithCustomToken, getAuth } from 'firebase/auth';
+import { ConfigService, ConfigModule } from '@nestjs/config';
+import { TestingModule, Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { Roles, UsersController } from './controller/user.controller';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { FirebaseAdminModule } from '../src';
 import { ExtractJwt } from 'passport-jwt';
 import * as firebase from 'firebase/app';
-import { signInWithCustomToken, getAuth } from 'firebase/auth';
+import * as request from 'supertest';
+
+import { UsersController, Roles } from './controller/user.controller';
+import { FirebaseAdminModule } from '../src';
 
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
@@ -20,17 +21,17 @@ describe('UsersController (e2e)', () => {
           isGlobal: true,
         }),
         FirebaseAdminModule.forRootAsync({
-          imports: [ConfigModule],
           useFactory: (configService: ConfigService) => ({
-            base64: configService.get('FIREBASE_SERVICE_ACCOUNT_BASE64'),
             auth: {
               config: {
                 extractor: ExtractJwt.fromAuthHeaderAsBearerToken(),
-                validateRole: true,
                 useLocalRoles: true,
+                validateRole: true,
               },
             },
+            base64: configService.get('FIREBASE_SERVICE_ACCOUNT_BASE64'),
           }),
+          imports: [ConfigModule],
           inject: [ConfigService],
         }),
       ],
@@ -101,7 +102,7 @@ describe('UsersController (e2e)', () => {
     const uid = configService.get('FIREBASE_TEST_USER');
     const response = await request(app.getHttpServer())
       .post('/users/set-claims')
-      .send({ uid, claim: Roles.ADMIN })
+      .send({ claim: Roles.ADMIN, uid })
       .expect(200);
 
     const responseBody = response.body;
@@ -127,7 +128,7 @@ describe('UsersController (e2e)', () => {
 
     await request(app.getHttpServer())
       .post('/users/set-claims')
-      .send({ uid, claim: Roles.USER })
+      .send({ claim: Roles.USER, uid })
       .expect(200);
 
     // refresh local token
@@ -143,7 +144,7 @@ describe('UsersController (e2e)', () => {
 
   afterAll(async () => {
     const uid = configService.get('FIREBASE_TEST_USER');
-    await request(app.getHttpServer()).post('/users/set-claims').send({ uid, claim: null });
+    await request(app.getHttpServer()).post('/users/set-claims').send({ claim: null, uid });
     await app.close();
     server.close();
   });

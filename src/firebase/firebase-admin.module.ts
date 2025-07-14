@@ -1,65 +1,39 @@
-import { DynamicModule, FactoryProvider, Global, Module, ValueProvider } from '@nestjs/common';
-import { FirebaseGuard } from './guard/firebase.guard';
-import { FirebaseProvider } from './provider/firebase.provider';
-import { FirebaseConstructorInterface } from './interface/firebase-constructor.interface';
-import { FirebaseAdminModuleAsyncOptions } from './interface/firebase-admin.interface';
+import { FactoryProvider, DynamicModule, ValueProvider, Global, Module } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
 import {
+  FIREBASE_ADMIN_MODULE_OPTIONS,
   FIREBASE_ADMIN_AUTH_STRATEGY,
   FIREBASE_ADMIN_CONFIG,
   FIREBASE_ADMIN_INJECT,
-  FIREBASE_ADMIN_MODULE_OPTIONS,
 } from './constant/firebase.constant';
-import { Reflector } from '@nestjs/core';
+import { FirebaseConstructorInterface } from './interface/firebase-constructor.interface';
+import { FirebaseAdminModuleAsyncOptions } from './interface/firebase-admin.interface';
+import { FirebaseProvider } from './provider/firebase.provider';
+import { FirebaseGuard } from './guard/firebase.guard';
 
-@Global()
 @Module({})
+@Global()
 export class FirebaseAdminModule {
-  static forRoot(config: FirebaseConstructorInterface): DynamicModule {
-    const firebaseProvider = new FirebaseProvider(config);
-
-    const firebaseAdminModuleOptions: ValueProvider<FirebaseProvider> = {
-      provide: FIREBASE_ADMIN_INJECT,
-      useValue: firebaseProvider,
-    };
-
-    const reflectorProvider: ValueProvider<Reflector> = {
-      provide: Reflector,
-      useValue: new Reflector(),
-    };
-
-    const firebaseAuthPassportOptions: ValueProvider<FirebaseGuard> = {
-      provide: FIREBASE_ADMIN_AUTH_STRATEGY,
-      useValue: new FirebaseGuard(firebaseProvider, config, new Reflector()),
-    };
-
-    return {
-      imports: [],
-      module: FirebaseAdminModule,
-      providers: [reflectorProvider, firebaseAdminModuleOptions, firebaseAuthPassportOptions],
-      exports: [reflectorProvider, firebaseAdminModuleOptions, firebaseAuthPassportOptions],
-    };
-  }
-
   static forRootAsync(options: FirebaseAdminModuleAsyncOptions): DynamicModule {
     const firebaseAdminModuleOptions: FactoryProvider<FirebaseProvider> = {
-      provide: FirebaseProvider,
       useFactory: (config: FirebaseConstructorInterface) => new FirebaseProvider(config),
       inject: [FIREBASE_ADMIN_MODULE_OPTIONS],
+      provide: FirebaseProvider,
     };
 
     const reflectorProvider: FactoryProvider<Reflector> = {
-      provide: Reflector,
       useFactory: () => new Reflector(),
+      provide: Reflector,
     };
 
     const firebaseOptions: FactoryProvider<FirebaseConstructorInterface> = {
-      provide: FIREBASE_ADMIN_CONFIG,
       useFactory: (config: FirebaseConstructorInterface) => config,
       inject: [FIREBASE_ADMIN_MODULE_OPTIONS],
+      provide: FIREBASE_ADMIN_CONFIG,
     };
 
     const firebaseAuthPassportOptions: FactoryProvider<FirebaseGuard> = {
-      provide: FirebaseGuard,
       useFactory: (
         firebaseProvider: FirebaseProvider,
         config: FirebaseConstructorInterface,
@@ -68,13 +42,12 @@ export class FirebaseAdminModule {
         return new FirebaseGuard(firebaseProvider, config, reflector);
       },
       inject: [FirebaseProvider, FIREBASE_ADMIN_MODULE_OPTIONS, Reflector],
+      provide: FirebaseGuard,
     };
 
     const asyncProviders = this.createAsyncProviders(options);
 
     return {
-      module: FirebaseAdminModule,
-      imports: [...(options.imports || [])],
       providers: [
         ...asyncProviders,
         reflectorProvider,
@@ -88,6 +61,34 @@ export class FirebaseAdminModule {
         firebaseOptions,
         firebaseAuthPassportOptions,
       ],
+      imports: [...(options.imports || [])],
+      module: FirebaseAdminModule,
+    };
+  }
+
+  static forRoot(config: FirebaseConstructorInterface): DynamicModule {
+    const firebaseProvider = new FirebaseProvider(config);
+
+    const firebaseAdminModuleOptions: ValueProvider<FirebaseProvider> = {
+      provide: FIREBASE_ADMIN_INJECT,
+      useValue: firebaseProvider,
+    };
+
+    const reflectorProvider: ValueProvider<Reflector> = {
+      useValue: new Reflector(),
+      provide: Reflector,
+    };
+
+    const firebaseAuthPassportOptions: ValueProvider<FirebaseGuard> = {
+      useValue: new FirebaseGuard(firebaseProvider, config, new Reflector()),
+      provide: FIREBASE_ADMIN_AUTH_STRATEGY,
+    };
+
+    return {
+      providers: [reflectorProvider, firebaseAdminModuleOptions, firebaseAuthPassportOptions],
+      exports: [reflectorProvider, firebaseAdminModuleOptions, firebaseAuthPassportOptions],
+      module: FirebaseAdminModule,
+      imports: [],
     };
   }
 
