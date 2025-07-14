@@ -1,7 +1,6 @@
 const isDryRun = process.argv.includes('--dry-run');
 
 module.exports = {
-  branches: [{ name: 'main' }],
   plugins: [
     '@semantic-release/commit-analyzer',
     '@semantic-release/release-notes-generator',
@@ -21,10 +20,11 @@ module.exports = {
     [
       '@semantic-release/git',
       {
-        assets: ['package.json', 'docs/CHANGELOG.md'],
         message: 'chore(release): ${nextRelease.version} [skip ci]',
+        assets: ['package.json', 'docs/CHANGELOG.md'],
       },
     ],
     ...(isDryRun ? [] : ['@semantic-release/github']),
   ],
+  branches: [{ name: 'main' }],
 };
