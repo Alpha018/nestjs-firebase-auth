@@ -1,15 +1,16 @@
-import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
-import { FirebaseProvider } from '../provider/firebase.provider';
-import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
-import {
-  FIREBASE_ADMIN_CONFIG,
-  FIREBASE_APP_ROLES_DECORATOR,
-  FIREBASE_CLAIMS_USER_METADATA,
-  FIREBASE_TOKEN_USER_METADATA,
-} from '../constant/firebase.constant';
+import { ExecutionContext, CanActivate, Injectable, Inject } from '@nestjs/common';
+import { DecodedIdToken } from 'firebase-admin/lib/auth';
 import { ExtractJwt } from 'passport-jwt';
 import { Reflector } from '@nestjs/core';
-import { DecodedIdToken } from 'firebase-admin/lib/auth';
+
+import {
+  FIREBASE_CLAIMS_USER_METADATA,
+  FIREBASE_APP_ROLES_DECORATOR,
+  FIREBASE_TOKEN_USER_METADATA,
+  FIREBASE_ADMIN_CONFIG,
+} from '../constant/firebase.constant';
+import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
+import { FirebaseProvider } from '../provider/firebase.provider';
 
 @Injectable()
 export class FirebaseGuard implements CanActivate {
@@ -34,7 +35,7 @@ export class FirebaseGuard implements CanActivate {
         token,
         this.config.auth?.config?.checkRevoked || false,
       );
-    } catch (e) {
+    } catch {
       return false;
     }
 

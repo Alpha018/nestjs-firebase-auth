@@ -1,9 +1,10 @@
-import { ExecutionContext } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { FirebaseProvider } from '../provider/firebase.provider';
-import { FIREBASE_ADMIN_CONFIG } from '../constant/firebase.constant';
-import { Reflector } from '@nestjs/core';
 import { DecodedIdToken } from 'firebase-admin/lib/auth';
+import { TestingModule, Test } from '@nestjs/testing';
+import { ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
+import { FIREBASE_ADMIN_CONFIG } from '../constant/firebase.constant';
+import { FirebaseProvider } from '../provider/firebase.provider';
 import { FirebaseGuard } from './firebase.guard';
 
 class FirebaseProviderMock {
@@ -28,9 +29,9 @@ describe('FirebaseGuard', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FirebaseGuard,
-        { provide: FirebaseProvider, useClass: FirebaseProviderMock },
+        { useClass: FirebaseProviderMock, provide: FirebaseProvider },
         { provide: FIREBASE_ADMIN_CONFIG, useValue: {} },
-        { provide: Reflector, useClass: ReflectorMock },
+        { useClass: ReflectorMock, provide: Reflector },
       ],
     }).compile();
 

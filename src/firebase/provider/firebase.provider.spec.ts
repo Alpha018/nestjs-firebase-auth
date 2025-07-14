@@ -1,11 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { initializeApp, getApps, getApp } from 'firebase-admin/app';
-import { FirebaseProvider } from './firebase.provider';
-import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
+import { DecodedIdToken } from 'firebase-admin/lib/auth';
+import { TestingModule, Test } from '@nestjs/testing';
 import { getAuth } from 'firebase-admin/auth';
 import * as fa from 'firebase-admin';
+
+import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
 import { userDecode } from '../__mocks__/firebase-user-mock';
-import { DecodedIdToken } from 'firebase-admin/lib/auth';
+import { FirebaseProvider } from './firebase.provider';
 
 jest.mock('firebase-admin/app', () => ({
   initializeApp: jest.fn(),
@@ -41,13 +42,13 @@ describe('FirebaseProvider', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
-          provide: FirebaseProvider,
           useFactory: () => {
             const data: FirebaseConstructorInterface = {
               base64: Buffer.from(JSON.stringify({ project_id: 'test' })).toString('base64'),
             };
             return new FirebaseProvider(data);
           },
+          provide: FirebaseProvider,
         },
       ],
     }).compile();

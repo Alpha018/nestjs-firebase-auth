@@ -1,4 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+
 import { FIREBASE_CLAIMS_USER_METADATA } from '../constant/firebase.constant';
 
 export const ClaimsFactory = (data: unknown, ctx: ExecutionContext) => {
