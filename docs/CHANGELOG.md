@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.5.0...v1.6.0) (2025-07-30)
+
+
+### Features
+
+* **firebase:** add comprehensive documentation for firebase decorators and provider ([91c1667](https://github.com/Alpha018/nestjs-firebase-auth/commit/91c16670267c35000a17c170ee8d55c4f1333b60))
+
 # [1.5.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.4.0...v1.5.0) (2025-07-14)
 
 
