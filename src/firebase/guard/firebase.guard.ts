@@ -13,7 +13,17 @@ import { FirebaseConstructorInterface } from '../interface/firebase-constructor.
 import { FirebaseProvider } from '../provider/firebase.provider';
 
 @Injectable()
+/**
+ * Class FirebaseGuard
+ * @description A NestJS Guard that validates Firebase authentication tokens and checks role-based access.
+ */
 export class FirebaseGuard implements CanActivate {
+  /**
+   * Creates an instance of FirebaseGuard.
+   * @param firebaseProvider Service to handle Firebase authentication and token verification.
+   * @param config Firebase Admin SDK configuration.
+   * @param reflector Utility to retrieve metadata (roles) from route handlers.
+   */
   constructor(
     private readonly firebaseProvider: FirebaseProvider,
     @Inject(FIREBASE_ADMIN_CONFIG)
@@ -21,6 +31,11 @@ export class FirebaseGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {}
 
+  /**
+   * Validates incoming requests based on Firebase authentication and optional role requirements.
+   * @param context Execution context of the current request.
+   * @returns A promise that resolves to `true` if the request is authorized, otherwise `false`.
+   */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromRequest(request);
@@ -72,6 +87,11 @@ export class FirebaseGuard implements CanActivate {
     return claims?.some((role) => requiredRoles.has(role));
   }
 
+  /**
+   * Extracts a JWT token from the Authorization header.
+   * @param request The HTTP request object.
+   * @returns The extracted token or `null` if not present.
+   */
   private extractTokenFromRequest(request: Request): string | null {
     const extractor =
       this.config.auth?.config?.extractor || ExtractJwt.fromAuthHeaderAsBearerToken();

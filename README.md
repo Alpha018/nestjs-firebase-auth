@@ -26,6 +26,8 @@
 - [Stay in touch](#stay-in-touch)
 - [License](#license)
 
+> **⚠️ Important:** Starting from this version, the minimum required Node.js version is **20**, due to the Firebase Admin SDK v12 upgrade.
+
 ## Installation
 ```bash
 $ npm i @alpha018/nestjs-firebase-auth firebase-admin
