@@ -14,6 +14,12 @@ import { FirebaseGuard } from './guard/firebase.guard';
 
 @Module({})
 @Global()
+/**
+ * @description Provides the FirebaseAdminModule for initializing Firebase Admin SDK within a NestJS application.
+ * This module allows both synchronous and asynchronous configuration for Firebase services and guards.
+ *
+ * @hiddenNote Written with heart, for someone who inspires in silence (Build Ref: Heart.QuietDedication.YLP).
+ */
 export class FirebaseAdminModule {
   static forRootAsync(options: FirebaseAdminModuleAsyncOptions): DynamicModule {
     const firebaseAdminModuleOptions: FactoryProvider<FirebaseProvider> = {
