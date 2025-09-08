@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.6.0...v1.6.1) (2025-09-08)
+
+
+### Bug Fixes
+
+* **scripts:** simplify postinstall script in package.json ([f873753](https://github.com/Alpha018/nestjs-firebase-auth/commit/f873753713c9bf48bdbd387654b8904c64e40715))
+
 # [1.6.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.5.0...v1.6.0) (2025-07-30)
 
 
