@@ -39,7 +39,7 @@ export class UsersController {
   @RolesGuard(Roles.ADMIN)
   @Get('get-claims')
   async getClaims(@FirebaseUserClaims() claims: Roles[]) {
-    return { ...claims };
+    return claims;
   }
 
   @UseGuards(FirebaseGuard)

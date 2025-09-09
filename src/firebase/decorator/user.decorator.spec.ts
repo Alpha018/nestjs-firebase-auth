@@ -38,6 +38,6 @@ describe('Firebase User Decorator - Unit Test', () => {
 
     const result = UserFactory(null, mockExecutionContext);
 
-    expect(result).toEqual(mockClaims);
+    expect(result).toEqual(mockClaims.user);
   });
 });

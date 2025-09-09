@@ -207,6 +207,16 @@ export class AppController {
   }
 }
 ```
+
+#### Difference Between `@FirebaseUser` and `@FirebaseUserClaims`
+
+> **Note:** Starting from version `>=1.7.x`, these two decorators are explicitly separated to avoid confusion (see [issue #11](https://github.com/Alpha018/nestjs-firebase-auth/issues/11)):
+
+- `@FirebaseUser()` → Returns the **full decoded token** (`auth.DecodedIdToken`).
+- `@FirebaseUserClaims()` → Returns only the **custom claims** (roles/permissions) defined for the user.
+
+This separation ensures that developers can access both the raw Firebase user object and the role/claims information independently.
+
 ## Resources
 
 Check out a few resources that may come in handy when working with NestJS:

@@ -87,14 +87,13 @@ describe('UsersController (e2e)', () => {
       .expect(200);
 
     const responseBody = result.body;
-    expect(responseBody).toHaveProperty('user');
-    expect(responseBody.user).toHaveProperty('aud');
-    expect(responseBody.user).toHaveProperty('user_id');
-    expect(typeof responseBody.user.user_id).toBe('string');
-    expect(responseBody.user).toHaveProperty('email');
-    expect(typeof responseBody.user.email).toBe('string');
-    expect(responseBody.user).toHaveProperty('firebase');
-    expect(responseBody.user.firebase).toHaveProperty('sign_in_provider');
+    expect(responseBody).toHaveProperty('aud');
+    expect(responseBody).toHaveProperty('user_id');
+    expect(typeof responseBody.user_id).toBe('string');
+    expect(responseBody).toHaveProperty('email');
+    expect(typeof responseBody.email).toBe('string');
+    expect(responseBody).toHaveProperty('firebase');
+    expect(responseBody.firebase).toHaveProperty('sign_in_provider');
   });
 
   it('/users/set-claims (POST - Set claims)', async () => {
@@ -118,7 +117,7 @@ describe('UsersController (e2e)', () => {
       .expect(200);
 
     const responseBody = response.body;
-    expect(responseBody).toHaveProperty('claims', [Roles.ADMIN]);
+    expect(responseBody).toHaveProperty([Roles.ADMIN]);
   });
 
   it('/users/get-claims (GET - Get claims - 401)', async () => {
