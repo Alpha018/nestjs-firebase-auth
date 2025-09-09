@@ -38,6 +38,6 @@ describe('Firebase Claims Decorator - Unit Test', () => {
 
     const result = ClaimsFactory(null, mockExecutionContext);
 
-    expect(result).toEqual(mockClaims);
+    expect(result).toEqual(mockClaims.claims);
   });
 });
