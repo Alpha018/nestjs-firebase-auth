@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.6.1...v1.7.0) (2025-09-09)
+
+
+### Features
+
+* **firebase:** update claims and user metadata retrieval ([2266547](https://github.com/Alpha018/nestjs-firebase-auth/commit/2266547539ba10d77fceef4abf082e1e22446626))
+
 ## [1.6.1](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.6.0...v1.6.1) (2025-09-08)
 
 
