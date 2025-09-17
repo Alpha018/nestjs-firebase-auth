@@ -7,12 +7,14 @@ import * as firebase from 'firebase/app';
 import * as request from 'supertest';
 
 import { UsersController, Roles } from './controller/user.controller';
+import { mockClaims } from './__mock__/custom-claims';
 import { FirebaseAdminModule } from '../src';
 
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
   let configService: ConfigService;
   let server: any;
+  const keyUserEnv = 'FIREBASE_TEST_USER';
 
   beforeAll(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
@@ -25,6 +27,7 @@ describe('UsersController (e2e)', () => {
             auth: {
               config: {
                 extractor: ExtractJwt.fromAuthHeaderAsBearerToken(),
+                rolesClaimKey: 'test-role-key',
                 validateRole: true,
               },
             },
@@ -67,7 +70,7 @@ describe('UsersController (e2e)', () => {
   });
 
   it('/users/login (POST - Ok)', async () => {
-    const uid = configService.get('FIREBASE_TEST_USER');
+    const uid = configService.get(keyUserEnv);
     const result = await request(app.getHttpServer()).post('/users/login').send({ uid });
 
     const responseBody = result.body;
@@ -78,7 +81,7 @@ describe('UsersController (e2e)', () => {
   });
 
   it('/users/me (POST - Login - Me)', async () => {
-    const uid = configService.get('FIREBASE_TEST_USER');
+    const uid = configService.get(keyUserEnv);
     const idToken = await loginAndGetIdToken(uid);
 
     const result = await request(app.getHttpServer())
@@ -96,10 +99,10 @@ describe('UsersController (e2e)', () => {
     expect(responseBody.firebase).toHaveProperty('sign_in_provider');
   });
 
-  it('/users/set-claims (POST - Set claims)', async () => {
-    const uid = configService.get('FIREBASE_TEST_USER');
+  it('/users/set-role-claims (POST - Set claims)', async () => {
+    const uid = configService.get(keyUserEnv);
     const response = await request(app.getHttpServer())
-      .post('/users/set-claims')
+      .post('/users/set-role-claims')
       .send({ claim: Roles.ADMIN, uid })
       .expect(200);
 
@@ -107,12 +110,23 @@ describe('UsersController (e2e)', () => {
     expect(responseBody).toHaveProperty('status');
   });
 
-  it('/users/get-claims (GET - Get claims)', async () => {
-    const uid = configService.get('FIREBASE_TEST_USER');
+  it('/users/set-claims (POST - Set claims)', async () => {
+    const uid = configService.get(keyUserEnv);
+    const response = await request(app.getHttpServer())
+      .post('/users/set-claims')
+      .send({ claim: mockClaims, uid })
+      .expect(200);
+
+    const responseBody = response.body;
+    expect(responseBody).toHaveProperty('status');
+  });
+
+  it('/users/get-role-claims (GET - Get claims)', async () => {
+    const uid = configService.get(keyUserEnv);
     const idToken = await loginAndGetIdToken(uid);
 
     const response = await request(app.getHttpServer())
-      .get('/users/get-claims')
+      .get('/users/get-role-claims')
       .set('Authorization', `Bearer ${idToken}`)
       .expect(200);
 
@@ -120,17 +134,29 @@ describe('UsersController (e2e)', () => {
     expect(responseBody).toHaveProperty([Roles.ADMIN]);
   });
 
-  it('/users/get-claims (GET - Get claims - 401)', async () => {
-    const uid = configService.get('FIREBASE_TEST_USER');
+  it('/users/get-claims (GET - Get claims)', async () => {
+    const uid = configService.get(keyUserEnv);
+    const idToken = await loginAndGetIdToken(uid);
+
+    const response = await request(app.getHttpServer())
+      .get('/users/get-claims')
+      .set('Authorization', `Bearer ${idToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual(expect.objectContaining(mockClaims));
+  });
+
+  it('/users/get-role-claims (GET - Get claims - 401)', async () => {
+    const uid = configService.get(keyUserEnv);
     const idToken = await loginAndGetIdToken(uid);
 
     await request(app.getHttpServer())
-      .post('/users/set-claims')
+      .post('/users/set-role-claims')
       .send({ claim: Roles.USER, uid })
       .expect(200);
 
     const response = await request(app.getHttpServer())
-      .get('/users/get-claims')
+      .get('/users/get-role-claims')
       .set('Authorization', `Bearer ${idToken}`)
       .expect(403);
 
@@ -139,8 +165,8 @@ describe('UsersController (e2e)', () => {
   });
 
   afterAll(async () => {
-    const uid = configService.get('FIREBASE_TEST_USER');
-    await request(app.getHttpServer()).post('/users/set-claims').send({ claim: null, uid });
+    const uid = configService.get(keyUserEnv);
+    await request(app.getHttpServer()).post('/users/set-role-claims').send({ claim: null, uid });
     await app.close();
     server.close();
   });
