@@ -1,3 +1,15 @@
+# [1.8.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.7.0...v1.8.0) (2025-09-17)
+
+
+### Bug Fixes
+
+* **workflow:** add FIREBASE_TEST_USER_LOCAL environment variable ([6e3dba6](https://github.com/Alpha018/nestjs-firebase-auth/commit/6e3dba627a4b6b1b0274226bbf090c0c46208206))
+
+
+### Features
+
+* **user.controller:** add new endpoints for managing claims and roles ([e727a6e](https://github.com/Alpha018/nestjs-firebase-auth/commit/e727a6e1d799490893bace727025d99c4a46cf89))
+
 # [1.7.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.6.1...v1.7.0) (2025-09-09)
 
 
