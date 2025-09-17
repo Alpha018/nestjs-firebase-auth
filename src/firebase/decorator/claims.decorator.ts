@@ -18,4 +18,4 @@ export const ClaimsFactory = (data: unknown, ctx: ExecutionContext) => {
 /**
  * Parameter decorator to access a user’s Firebase claims.
  */
-export const FirebaseUserClaims = createParamDecorator(ClaimsFactory);
+export const FirebaseRolesClaims = createParamDecorator(ClaimsFactory);

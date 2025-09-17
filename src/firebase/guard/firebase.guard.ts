@@ -37,54 +37,80 @@ export class FirebaseGuard implements CanActivate {
    * @returns A promise that resolves to `true` if the request is authorized, otherwise `false`.
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest();
+    const authConfig = this.config.auth?.config;
+
     const token = this.extractTokenFromRequest(request);
 
     if (!token) {
       return false;
     }
 
-    let decodedToken: DecodedIdToken;
-    try {
-      decodedToken = await this.firebaseProvider.auth.verifyIdToken(
-        token,
-        this.config.auth?.config?.checkRevoked || false,
-      );
-    } catch {
+    const decodedToken = await this.verifyToken(token, authConfig?.checkRevoked ?? false);
+    if (!decodedToken) {
       return false;
     }
 
-    request['metadata'] = {
-      ...request['metadata'],
-      [FIREBASE_TOKEN_USER_METADATA]: {
-        user: decodedToken,
-      },
-    };
+    this.attachUserToRequest(request, decodedToken);
 
-    if (!this.config.auth?.config?.validateRole) {
+    if (!authConfig?.validateRole) {
       return true;
     }
 
-    const roles = this.reflector.get(FIREBASE_APP_ROLES_DECORATOR, context.getHandler());
-
-    if (!roles) {
-      return true;
-    }
-
-    const claims = await this.firebaseProvider.getClaimsRoleBase(
+    return this.handleRoleValidation(
+      context,
+      request,
       decodedToken,
-      this.config.auth?.config?.useLocalRoles || false,
+      authConfig?.useLocalRoles ?? false,
     );
+  }
 
-    request['metadata'] = {
-      ...request['metadata'],
-      [FIREBASE_CLAIMS_USER_METADATA]: {
-        claims: claims,
-      },
-    };
+  /**
+   * Handles role-based validation for the request.
+   * It retrieves the roles required by the route handler, fetches the user's roles,
+   * and checks if the user has at least one of the required roles.
+   *
+   * @param context The execution context, used to access route metadata.
+   * @param request The incoming HTTP request object.
+   * @param decodedToken The user's decoded Firebase ID token.
+   * @param useLocalRoles A flag indicating whether to use roles from the token payload or fetch from Firebase.
+   * @returns A promise that resolves to `true` if the user is authorized, otherwise `false`.
+   */
+  private async handleRoleValidation(
+    context: ExecutionContext,
+    request: any,
+    decodedToken: DecodedIdToken,
+    useLocalRoles: boolean,
+  ): Promise<boolean> {
+    const requiredRoles = this.reflector.get(FIREBASE_APP_ROLES_DECORATOR, context.getHandler());
 
-    const requiredRoles = new Set(roles);
-    return claims?.some((role) => requiredRoles.has(role));
+    if (!requiredRoles) {
+      return true;
+    }
+
+    const userRoles = await this.firebaseProvider.getClaimsRoleBase(decodedToken, useLocalRoles);
+    this.attachClaimsToRequest(request, userRoles);
+
+    if (!userRoles) {
+      return false;
+    }
+
+    const requiredRolesSet = new Set(requiredRoles);
+    return userRoles.some((role) => requiredRolesSet.has(role));
+  }
+
+  /**
+   * Verifies the Firebase ID token.
+   * @param token The ID token to verify.
+   * @param checkRevoked Whether to check if the token has been revoked.
+   * @returns The decoded token if valid, otherwise `null`.
+   */
+  private async verifyToken(token: string, checkRevoked: boolean): Promise<DecodedIdToken | null> {
+    try {
+      return await this.firebaseProvider.auth.verifyIdToken(token, checkRevoked);
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -92,9 +118,27 @@ export class FirebaseGuard implements CanActivate {
    * @param request The HTTP request object.
    * @returns The extracted token or `null` if not present.
    */
-  private extractTokenFromRequest(request: Request): string | null {
+  private extractTokenFromRequest(request: any): string | null {
     const extractor =
       this.config.auth?.config?.extractor || ExtractJwt.fromAuthHeaderAsBearerToken();
     return extractor(request);
+  }
+
+  /**
+   * Attaches the decoded user token to the request metadata.
+   * @param request The request object.
+   * @param user The decoded Firebase ID token.
+   */
+  private attachUserToRequest(request: any, user: DecodedIdToken): void {
+    request.metadata = { ...request.metadata, [FIREBASE_TOKEN_USER_METADATA]: { user } };
+  }
+
+  /**
+   * Attaches the user's claims to the request metadata.
+   * @param request The request object.
+   * @param claims The user's custom claims.
+   */
+  private attachClaimsToRequest(request: any, claims: unknown): void {
+    request.metadata = { ...request.metadata, [FIREBASE_CLAIMS_USER_METADATA]: { claims } };
   }
 }

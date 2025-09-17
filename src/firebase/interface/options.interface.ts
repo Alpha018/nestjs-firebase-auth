@@ -44,4 +44,21 @@ export interface FirebaseAuthStrategyOptions {
    * @default false
    */
   validateRole?: boolean;
+
+  /**
+   * The name of the key within the Firebase custom claims that stores the user's roles.
+   *
+   * This allows you to customize the property name for roles in the custom claims object.
+   * For example, if you set this to `'permissions'`, the library will look for a `permissions`
+   * array in the custom claims.
+   *
+   * All role-related operations performed by `FirebaseProvider` (such as getting, setting, or preserving roles) will use this key.
+   *
+   * @example
+   * // If rolesClaimKey is 'user_roles', the custom claims might look like:
+   * // { "user_roles": ["ADMIN", "EDITOR"] }
+   *
+   * @default 'roles' (defined by `FIREBASE_APP_ROLES_DEFAULT_DECORATOR`)
+   */
+  rolesClaimKey?: string;
 }

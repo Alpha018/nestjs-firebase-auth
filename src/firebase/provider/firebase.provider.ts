@@ -5,6 +5,7 @@ import { Injectable } from '@nestjs/common';
 import * as fa from 'firebase-admin';
 
 import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
+import { FIREBASE_APP_ROLES_DEFAULT_DECORATOR } from '../constant/firebase.constant';
 
 @Injectable()
 /**
@@ -62,26 +63,44 @@ export class FirebaseProvider {
    * @returns An array of roles type `T` or `undefined` if no roles are found.
    */
   async getClaimsRoleBase<T>(user: DecodedIdToken, localDecode: boolean): Promise<undefined | T[]> {
+    const rolesKey = this.data.auth.config.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
+
     if (localDecode) {
-      return user.roles;
+      return user?.[rolesKey];
     }
 
     const { customClaims } = await this.auth.getUser(user.uid);
-    return customClaims?.roles;
+    return customClaims?.[rolesKey];
   }
 
   /**
-   * Sets role-based claims for a specific Firebase user.
-   * This overwrites the user's custom claims with a new `roles` array.
+   * Sets custom claims for a specific Firebase user, preserving any existing role claims.
+   * This method merges the new claims with any existing custom claims, but ensures that
+   * the role-specific claim (e.g., 'roles') is not overwritten by this operation.
    *
-   * @template T The type of roles being assigned.
    * @param uid The UID of the user to update.
-   * @param claims An array of roles to assign to the user.
+   * @param claims An object containing the custom claims to set.
    * @returns A promise that resolves once the claims are successfully updated.
    */
-  setClaimsRoleBase<T>(uid: string, claims: T[]): Promise<void> {
-    return this.auth.setCustomUserClaims(uid, {
-      roles: claims,
-    });
+  async setClaimsBase(uid: string, claims: Record<string, any>): Promise<void> {
+    const rolesKey = this.data.auth.config.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
+    const { customClaims } = await this.auth.getUser(uid);
+    return this.auth.setCustomUserClaims(uid, { ...claims, [rolesKey]: customClaims?.[rolesKey] });
+  }
+
+  /**
+   * Sets or overwrites the role-based claims for a specific Firebase user, preserving other custom claims.
+   * This method merges the new role claims with any existing custom claims by overwriting the value
+   * of the role-specific key (e.g., 'roles') while keeping all other claims intact.
+   *
+   * @template T The type of the elements in the roles array.
+   * @param uid The UID of the user to update.
+   * @param claims An array of roles to assign to the user. This will replace any existing roles.
+   * @returns A promise that resolves once the claims are successfully updated.
+   */
+  async setClaimsRoleBase<T>(uid: string, claims: T[]): Promise<void> {
+    const rolesKey = this.data.auth.config.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
+    const { customClaims } = await this.auth.getUser(uid);
+    return this.auth.setCustomUserClaims(uid, { ...(customClaims || {}), [rolesKey]: claims });
   }
 }

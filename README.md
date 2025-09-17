@@ -55,6 +55,7 @@ import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
               checkRevoked: true, // Set to true if you want to check for revoked Firebase tokens
               validateRole: true, // Set to true if you want to validate user roles
               useLocalRoles: true, // Set to true if you want to validate user roles locally without firebase call
+              rolesClaimKey: 'user_roles' // Set the name of the key within the Firebase custom claims that stores user roles
             },
           },
         }),
@@ -74,6 +75,7 @@ import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
 | `auth.config.checkRevoked`  | `boolean`  | Optional | Set to `true` to check if the Firebase token has been revoked. Defaults to `false`.                                                                                                                                       |
 | `auth.config.validateRole`  | `boolean`  | Optional | Set to `true` to validate user roles using Firebase custom claims. Defaults to `false`.                                                                                                                                   |
 | `auth.config.useLocalRoles` | `boolean`  | Optional | Set to `true` to validate user roles using local custom claims inside the JWT token. Defaults to `false`. **Note:** If you update the claims, previously issued tokens may still contain outdated roles and remain valid. |
+| `auth.config.rolesClaimKey` | `string`   | Optional | The name of the key within the Firebase custom claims that stores user roles. Defaults to `'roles'`. This allows you to customize the property name for roles in your custom claims object.                               |
 
 
 ### Auth Guard Without Role Validation
@@ -96,7 +98,7 @@ export class AppController {
 
 ### Auth Guard With Role Validation
 
-To enforce role-based access control, you need to set custom claims in Firebase. Here's how you can set custom claims:
+To enforce role-based access control, you need to set role-based custom claims in Firebase. Here's how you can set roles for a user using `setClaimsRoleBase`:
 ```ts
 import { FirebaseProvider } from '@alpha018/nestjs-firebase-auth';
 
@@ -106,16 +108,16 @@ enum Roles {
 }
 
 @Controller('')
-export class AppController implements OnModuleInit {
+export class AppController {
   constructor(
     private readonly firebaseProvider: FirebaseProvider,
   ) {}
 
   @Get()
-  async setClaims() {
+  async setUserRoles() {
     await this.firebaseProvider.setClaimsRoleBase<Roles>(
-      'FirebaseUID',
-      [Roles.ADMIN, ...]
+      'some-firebase-uid', // The UID of the user you want to set roles for
+      [Roles.ADMIN]
     );
     return { status: 'ok' }
   }
@@ -213,7 +215,7 @@ export class AppController {
 > **Note:** Starting from version `>=1.7.x`, these two decorators are explicitly separated to avoid confusion (see [issue #11](https://github.com/Alpha018/nestjs-firebase-auth/issues/11)):
 
 - `@FirebaseUser()` → Returns the **full decoded token** (`auth.DecodedIdToken`).
-- `@FirebaseUserClaims()` → Returns only the **custom claims** (roles/permissions) defined for the user.
+- `@FirebaseUserClaims()` → Returns only the **custom role claims** (roles/permissions) defined for the user.
 
 This separation ensures that developers can access both the raw Firebase user object and the role/claims information independently.
 
