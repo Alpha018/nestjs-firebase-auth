@@ -149,36 +149,13 @@ export class AppController {
 
 ### Additional Information
 
-To retrieve user claims, use the following example:
-```ts
-import { FirebaseProvider } from '@alpha018/nestjs-firebase-auth';
-
-enum Roles {
-  ADMIN,
-  USER,
-}
-
-@Controller('')
-export class AppController {
-  constructor(
-    private readonly firebaseProvider: FirebaseProvider,
-  ) {}
-
-  @Get()
-  async mainFunction() {
-    const claims = await this.firebaseProvider.getClaimsRoleBase<Roles>(
-      'FirebaseUID',
-    );
-    return claims; // This returns an array of the user's claims
-  }
-}
-```
-
-To retrieve Decode ID Token and Claims, use the following example:
+To retrieve the Decoded ID Token and role claims within a protected route, use the `@FirebaseUser` and `@FirebaseRolesClaims` parameter decorators.
 ```ts
 import {
   FirebaseGuard,
-  FirebaseProvider, FirebaseUser, FirebaseUserClaims,
+  FirebaseProvider,
+  FirebaseUser,
+  FirebaseRolesClaims,
   RolesGuard,
 } from '@alpha018/nestjs-firebase-auth';
 
@@ -200,7 +177,7 @@ export class AppController {
   @Get()
   async mainFunction(
     @FirebaseUser() user: auth.DecodedIdToken,
-    @FirebaseUserClaims() claims: Roles[],
+    @FirebaseRolesClaims() claims: Roles[],
   ) {
     return {
       user,
