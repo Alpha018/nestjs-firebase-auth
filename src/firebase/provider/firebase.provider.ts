@@ -34,22 +34,34 @@ export class FirebaseProvider {
 
   private readonly _app: App;
 
+  private get rolesKey(): string {
+    return this.data.auth.config.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
+  }
+
   /**
    * Creates an instance of FirebaseProvider.
    * Initializes Firebase using base64 credentials or an options object.
    * @param data Configuration object containing Firebase credentials (base64-encoded) or options.
    */
   constructor(private readonly data: FirebaseConstructorInterface) {
+    if (getApps().length) {
+      this._app = getApp();
+      return;
+    }
+
+    let appOptions: fa.AppOptions | undefined;
+
     if (data.base64) {
-      this._app = initializeApp({
+      appOptions = {
         credential: fa.credential.cert(
           JSON.parse(Buffer.from(data.base64, 'base64').toString('utf-8')),
         ),
-      });
+      };
     } else if (data.options) {
-      this._app = initializeApp(this.data.options);
+      appOptions = data.options;
     }
-    this._app = getApps().length > 0 ? getApp() : initializeApp();
+
+    this._app = initializeApp(appOptions);
   }
 
   /**
@@ -63,14 +75,12 @@ export class FirebaseProvider {
    * @returns An array of roles type `T` or `undefined` if no roles are found.
    */
   async getClaimsRoleBase<T>(user: DecodedIdToken, localDecode: boolean): Promise<undefined | T[]> {
-    const rolesKey = this.data.auth.config.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
-
     if (localDecode) {
-      return user?.[rolesKey];
+      return user?.[this.rolesKey];
     }
 
     const { customClaims } = await this.auth.getUser(user.uid);
-    return customClaims?.[rolesKey];
+    return customClaims?.[this.rolesKey];
   }
 
   /**
@@ -83,9 +93,11 @@ export class FirebaseProvider {
    * @returns A promise that resolves once the claims are successfully updated.
    */
   async setClaimsBase(uid: string, claims: Record<string, any>): Promise<void> {
-    const rolesKey = this.data.auth.config.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
     const { customClaims } = await this.auth.getUser(uid);
-    return this.auth.setCustomUserClaims(uid, { ...claims, [rolesKey]: customClaims?.[rolesKey] });
+    return this.auth.setCustomUserClaims(uid, {
+      ...claims,
+      [this.rolesKey]: customClaims?.[this.rolesKey],
+    });
   }
 
   /**
@@ -99,8 +111,10 @@ export class FirebaseProvider {
    * @returns A promise that resolves once the claims are successfully updated.
    */
   async setClaimsRoleBase<T>(uid: string, claims: T[]): Promise<void> {
-    const rolesKey = this.data.auth.config.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
     const { customClaims } = await this.auth.getUser(uid);
-    return this.auth.setCustomUserClaims(uid, { ...(customClaims || {}), [rolesKey]: claims });
+    return this.auth.setCustomUserClaims(uid, {
+      ...(customClaims || {}),
+      [this.rolesKey]: claims,
+    });
   }
 }

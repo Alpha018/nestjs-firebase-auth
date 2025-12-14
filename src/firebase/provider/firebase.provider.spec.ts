@@ -1,6 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase-admin/app';
 import { DecodedIdToken } from 'firebase-admin/lib/auth';
-import { TestingModule, Test } from '@nestjs/testing';
 import { getAuth } from 'firebase-admin/auth';
 import * as fa from 'firebase-admin';
 
@@ -26,43 +25,30 @@ jest.mock('firebase-admin', () => ({
 
 describe('FirebaseProvider', () => {
   let provider: FirebaseProvider;
-  const mockApp = {};
+  const mockApp = { name: 'mockApp' };
   const mockAuth = {
     setCustomUserClaims: jest.fn(),
     getUser: jest.fn(),
   };
 
-  beforeEach(async () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+
     (initializeApp as jest.Mock).mockReturnValue(mockApp);
     (getApps as jest.Mock).mockReturnValue([mockApp]);
     (getApp as jest.Mock).mockReturnValue(mockApp);
     (getAuth as jest.Mock).mockReturnValue(mockAuth);
     (fa.credential.cert as jest.Mock).mockReturnValue({});
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        {
-          useFactory: () => {
-            const data: FirebaseConstructorInterface = {
-              auth: {
-                config: {
-                  rolesClaimKey: 'test',
-                },
-              },
-              base64: Buffer.from(JSON.stringify({ project_id: 'test' })).toString('base64'),
-            };
-            return new FirebaseProvider(data);
-          },
-          provide: FirebaseProvider,
+    const data: FirebaseConstructorInterface = {
+      base64: Buffer.from(JSON.stringify({ project_id: 'test' })).toString('base64'),
+      auth: {
+        config: {
+          rolesClaimKey: 'test',
         },
-      ],
-    }).compile();
-
-    provider = module.get<FirebaseProvider>(FirebaseProvider);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
+      },
+    };
+    provider = new FirebaseProvider(data);
   });
 
   it('should be defined', () => {
@@ -71,6 +57,7 @@ describe('FirebaseProvider', () => {
 
   describe('constructor', () => {
     it('should initialize app with base64 data', () => {
+      (getApps as jest.Mock).mockReturnValue([]);
       const data: FirebaseConstructorInterface = {
         base64: Buffer.from(JSON.stringify({ projectId: 'test' })).toString('base64'),
       };
@@ -81,6 +68,7 @@ describe('FirebaseProvider', () => {
     });
 
     it('should initialize app with options', () => {
+      (getApps as jest.Mock).mockReturnValue([]);
       const data: FirebaseConstructorInterface = {
         options: { projectId: 'test' },
       };
@@ -89,6 +77,7 @@ describe('FirebaseProvider', () => {
     });
 
     it('should initialize default app if no apps are initialized', () => {
+      (getApps as jest.Mock).mockReturnValue([]);
       new FirebaseProvider({});
       expect(initializeApp).toHaveBeenCalled();
     });
@@ -97,6 +86,7 @@ describe('FirebaseProvider', () => {
       (getApps as jest.Mock).mockReturnValue([mockApp]);
       new FirebaseProvider({});
       expect(getApp).toHaveBeenCalled();
+      expect(initializeApp).not.toHaveBeenCalled();
     });
   });
 
@@ -113,38 +103,46 @@ describe('FirebaseProvider', () => {
   });
 
   describe('setClaimsBase', () => {
-    it('should set custom claims while preserving role claims', async () => {
+    it('should set custom claims while preserving role claims and other existing claims', async () => {
       const uid = 'test-uid';
-      const newClaims = { premium: true };
-      const existingRoles = { test: ['user'] };
-      mockAuth.getUser.mockResolvedValue({ customClaims: existingRoles });
+      const newClaims = { premium: true, other: 'new' };
+      const existingClaims = { test: ['user'], other: 'old' };
+      mockAuth.getUser.mockResolvedValue({ customClaims: existingClaims });
 
       await provider.setClaimsBase(uid, newClaims);
 
       expect(mockAuth.getUser).toHaveBeenCalledWith(uid);
       expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith(uid, {
+        ...existingClaims,
         ...newClaims,
-        ...existingRoles,
+        test: existingClaims.test, // roles are preserved
       });
     });
   });
 
   describe('setClaimsRoleBase', () => {
-    it('should set custom user claims', async () => {
+    it('should set/overwrite role claims while preserving other claims', async () => {
       const uid = 'test-uid';
-      const claims = ['admin'];
-      mockAuth.getUser.mockResolvedValue({ customClaims: {} });
+      const newRoles = ['admin'];
+      const existingClaims = { test: ['user'], other: 'foo' };
+      mockAuth.getUser.mockResolvedValue({ customClaims: existingClaims });
       mockAuth.setCustomUserClaims.mockResolvedValue(undefined);
 
-      await provider.setClaimsRoleBase(uid, claims);
-      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith(uid, { test: claims });
+      await provider.setClaimsRoleBase(uid, newRoles);
+      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith(uid, {
+        ...existingClaims,
+        test: newRoles,
+      });
     });
   });
 
   describe('getClaimsRoleBase', () => {
     it('should get claims from local token when localDecode is true', async () => {
       const claims = ['admin'];
-      const userWithClaims = { ...userDecode, test: claims } as any as DecodedIdToken;
+      const userWithClaims = {
+        ...userDecode,
+        test: claims,
+      } as any as DecodedIdToken;
 
       const result = await provider.getClaimsRoleBase(userWithClaims, true);
       expect(result).toEqual(claims);
