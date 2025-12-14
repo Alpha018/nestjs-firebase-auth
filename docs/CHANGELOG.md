@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.8.0...v1.8.1) (2025-12-14)
+
+
+### Bug Fixes
+
+* **firebase:** streamline FirebaseProvider tests and improve code structure ([23f037c](https://github.com/Alpha018/nestjs-firebase-auth/commit/23f037cf3a541174ac0cdf7adaa9288786ae8322))
+
 # [1.8.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.7.0...v1.8.0) (2025-09-17)
 
 
