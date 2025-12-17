@@ -16,6 +16,13 @@ import { FirebaseProvider } from '../provider/firebase.provider';
 /**
  * Class FirebaseGuard
  * @description A NestJS Guard that validates Firebase authentication tokens and checks role-based access.
+ *
+ * @deprecated Use `@Auth` or `@Roles` decorators instead of using this guard directly.
+ * The `FirebaseGuard` class export will be removed in the next major version.
+ *
+ * Example replacement:
+ * - `@UseGuards(FirebaseGuard)` -> `@Auth()`
+ * - `@UseGuards(FirebaseGuard)` + `@Roles(...)` -> `@Roles(...)`
  */
 export class FirebaseGuard implements CanActivate {
   /**
@@ -44,6 +51,18 @@ export class FirebaseGuard implements CanActivate {
 
     if (!token) {
       return false;
+    }
+
+    // Optimization: Check if the user is already attached to request to avoid redundant verification
+    // This handles cases where the guard is applied multiple times (e.g. global + composed decorator)
+    if (request.metadata?.[FIREBASE_TOKEN_USER_METADATA]) {
+      const decodedToken = request.metadata[FIREBASE_TOKEN_USER_METADATA].user;
+      return this.handleRoleValidation(
+        context,
+        request,
+        decodedToken,
+        authConfig?.useLocalRoles ?? false,
+      );
     }
 
     const decodedToken = await this.verifyToken(token, authConfig?.checkRevoked ?? false);

@@ -35,7 +35,7 @@ export class FirebaseProvider {
   private readonly _app: App;
 
   private get rolesKey(): string {
-    return this.data.auth.config.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
+    return this.data.auth?.config?.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
   }
 
   /**

@@ -3,7 +3,7 @@ import { TestingModule, Test } from '@nestjs/testing';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { FIREBASE_ADMIN_CONFIG } from '../constant/firebase.constant';
+import { FIREBASE_TOKEN_USER_METADATA, FIREBASE_ADMIN_CONFIG } from '../constant/firebase.constant';
 import { FirebaseProvider } from '../provider/firebase.provider';
 import { FirebaseGuard } from './firebase.guard';
 
@@ -60,7 +60,22 @@ describe('FirebaseGuard', () => {
       } as any;
     });
 
+    it('should skip verification if user is already attached (optimization)', async () => {
+      request.headers.authorization = bearerToken;
+      // Mock existing attached user
+      request.metadata = {
+        [FIREBASE_TOKEN_USER_METADATA]: { user: { uid: 'existing_user' } },
+      };
+
+      // Should NOT call verifyIdToken
+      const result = await guard.canActivate(context);
+      expect(firebaseProvider.auth.verifyIdToken).not.toHaveBeenCalled();
+      expect(result).toBe(true);
+    });
+
     it('should return false if no token is found', async () => {
+      // Ensure headers object exists but authorization is missing/undefined
+      request.headers = {};
       const result = await guard.canActivate(context);
       expect(result).toBe(false);
     });
@@ -68,6 +83,14 @@ describe('FirebaseGuard', () => {
     it('should return false if token verification fails', async () => {
       request.headers.authorization = 'Bearer invalid_token';
       firebaseProvider.auth.verifyIdToken.mockRejectedValue(new Error('Token verification failed'));
+
+      const result = await guard.canActivate(context);
+      expect(result).toBe(false);
+    });
+
+    it('should return false if token verification returns null', async () => {
+      request.headers.authorization = bearerToken;
+      firebaseProvider.auth.verifyIdToken.mockResolvedValue(null as any);
 
       const result = await guard.canActivate(context);
       expect(result).toBe(false);
@@ -106,6 +129,18 @@ describe('FirebaseGuard', () => {
       firebaseProvider.auth.verifyIdToken.mockResolvedValue({ uid: 'user_id' } as DecodedIdToken);
       reflector.get.mockReturnValue(['admin']);
       firebaseProvider.getClaimsRoleBase.mockResolvedValue(['user']);
+
+      (guard as any).config.auth = { config: { validateRole: true } };
+
+      const result = await guard.canActivate(context);
+      expect(result).toBe(false);
+    });
+
+    it('should return false if user has no roles (roles undefined) but roles are required', async () => {
+      request.headers.authorization = bearerToken;
+      firebaseProvider.auth.verifyIdToken.mockResolvedValue({ uid: 'user_id' } as DecodedIdToken);
+      reflector.get.mockReturnValue(['admin']);
+      firebaseProvider.getClaimsRoleBase.mockResolvedValue(undefined); // Simulate no roles
 
       (guard as any).config.auth = { config: { validateRole: true } };
 

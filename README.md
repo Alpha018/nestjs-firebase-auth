@@ -12,6 +12,12 @@
   <a href="https://nestjs.com" target="_blank">
     <img src="https://img.shields.io/badge/built%20with-NestJs-red.svg" alt="Built with NestJS">
   </a>
+  <a href="https://github.com/Alpha018/nestjs-firebase-auth/actions">
+    <img src="https://github.com/Alpha018/nestjs-firebase-auth/actions/workflows/test.yml/badge.svg" alt="Test Status">
+  </a>
+  <a href="https://github.com/Alpha018/nestjs-firebase-auth">
+    <img src="https://img.shields.io/github/stars/Alpha018/nestjs-firebase-auth?style=social" alt="GitHub stars">
+  </a>
 </div>
 
 ## Table of Contents
@@ -38,7 +44,7 @@ $ npm i @alpha018/nestjs-firebase-auth firebase-admin
 ### Import The Module
 To use Firebase authentication in your application, import the module into your main module.
 ```ts
-import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
+import { FirebaseAdminModule } from '@alpha018/nestjs-firebase-auth';
 
 @Module({
   imports: [
@@ -79,16 +85,19 @@ import { FirebaseAuthGuard } from '@alpha018/nestjs-firebase-auth';
 
 
 ### Auth Guard Without Role Validation
+
+> **⚠️ Deprecation Warning:** Direct usage of `UseGuards(FirebaseGuard)` is deprecated. Please use the `@Auth` decorator instead.
+
 To protect an endpoint without validating user roles, use the Auth Guard to ensure the Firebase user's token is valid.
 ```ts
-import { FirebaseGuard, FirebaseProvider } from '@alpha018/nestjs-firebase-auth';
+import { Auth, FirebaseProvider } from '@alpha018/nestjs-firebase-auth';
 
 export class AppController {
   constructor(
     private readonly firebaseProvider: FirebaseProvider,
   ) {}
 
-  @UseGuards(FirebaseGuard) // This line protects your endpoint. If `validateRole` is enabled, it also validates the user's role.
+  @Auth() // This line protects your endpoint with Firebase Auth
   @Get()
   mainFunction() {
     return 'Hello World';
@@ -126,7 +135,7 @@ export class AppController {
 
 Then, use the Auth Guard with role validation to check if a user has the necessary permissions to access an endpoint:
 ```ts
-import { FirebaseGuard, FirebaseProvider, RolesGuard } from '@alpha018/nestjs-firebase-auth';
+import { Roles } from '@alpha018/nestjs-firebase-auth';
 enum Roles {
   ADMIN,
   USER,
@@ -138,11 +147,41 @@ export class AppController {
     private readonly firebaseProvider: FirebaseProvider,
   ) {}
 
-  @RolesGuard(Roles.ADMIN, Roles.USER) // This line checks the custom claims of the Firebase user to protect the endpoint
-  @UseGuards(FirebaseGuard) // This line protects your endpoint and, if `validateRole` is enabled, validates the user's role
+  @Roles(Roles.ADMIN, Roles.USER) // This line checks the custom claims of the Firebase user AND ensures the user is authenticated (implicitly applies FirebaseGuard)
   @Get()
   mainFunction() {
     return 'Hello World';
+  }
+}
+```
+
+### Controller-Level Authentication with Method-Level Authorization
+
+You can apply authentication at the controller level using `@Auth()` and then define specific roles for individual routes using `@Roles()`. The library is optimized to prevent redundant token verification in this scenario.
+
+```ts
+import { Auth, Roles } from '@alpha018/nestjs-firebase-auth';
+
+enum AppRoles {
+  ADMIN,
+  USER,
+}
+
+@Auth() // Protects all routes in this controller (ensures valid token)
+@Controller('users')
+export class UsersController {
+  
+  @Get('profile')
+  getProfile() {
+    // Accessible by any authenticated user
+    return { status: 'ok' };
+  }
+
+  @Roles(AppRoles.ADMIN) // Adds specific authorization requirement
+  @Get('admin-dashboard')
+  getAdminDashboard() {
+    // Accessible ONLY by authenticated users with ADMIN role
+    return { status: 'secure' };
   }
 }
 ```
@@ -152,11 +191,10 @@ export class AppController {
 To retrieve the Decoded ID Token and role claims within a protected route, use the `@FirebaseUser` and `@FirebaseRolesClaims` parameter decorators.
 ```ts
 import {
-  FirebaseGuard,
   FirebaseProvider,
   FirebaseUser,
   FirebaseRolesClaims,
-  RolesGuard,
+  Roles,
 } from '@alpha018/nestjs-firebase-auth';
 
 import { auth } from 'firebase-admin';
@@ -172,8 +210,7 @@ export class AppController {
     private readonly firebaseProvider: FirebaseProvider,
   ) {}
 
-  @RolesGuard(Roles.ADMIN, Roles.USER)
-  @UseGuards(FirebaseGuard)
+  @Roles(Roles.ADMIN, Roles.USER)
   @Get()
   async mainFunction(
     @FirebaseUser() user: auth.DecodedIdToken,
@@ -195,6 +232,45 @@ export class AppController {
 - `@FirebaseUserClaims()` → Returns only the **custom role claims** (roles/permissions) defined for the user.
 
 This separation ensures that developers can access both the raw Firebase user object and the role/claims information independently.
+
+## Migration Guide (v2.0.x)
+
+To improve semantic clarity and developer experience, direct usage of guards has been deprecated in favor of more descriptive decorators.
+
+### 1. Replace `RolesGuard` with `@Roles`
+
+**Deprecated:**
+```ts
+@UseGuards(FirebaseGuard) // or alone if global
+@RolesGuard(Roles.ADMIN)
+```
+
+**New Way:**
+```ts
+@Roles(Roles.ADMIN)
+```
+*Note: `@Roles` automatically applies the authentication guard.*
+
+---
+
+### 2. Replace `UseGuards(FirebaseGuard)` with `@Auth`
+
+**Deprecated:**
+```ts
+@UseGuards(FirebaseGuard)
+```
+
+**New Way:**
+```ts
+@Auth()
+```
+
+---
+
+### Why migrate?
+- **Better readability**: `@Auth` vs `@UseGuards(FirebaseGuard)` clearly states intent.
+- **Optimized Performance**: The new decorators use an optimized guard that prevents redundant token verification checks when composing controllers and methods.
+- **Future Proofing**: Direct class exports for guards will be removed in the next major version.
 
 ## Resources
 
