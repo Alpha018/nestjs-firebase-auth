@@ -233,7 +233,7 @@ export class AppController {
 
 This separation ensures that developers can access both the raw Firebase user object and the role/claims information independently.
 
-## Migration Guide (v2.0.x)
+## Migration Guide (v1.9.x)
 
 To improve semantic clarity and developer experience, direct usage of guards has been deprecated in favor of more descriptive decorators.
 
