@@ -51,6 +51,21 @@ describe('FirebaseProvider', () => {
     provider = new FirebaseProvider(data);
   });
 
+  it('should use default roles key if config is missing', () => {
+    const data: FirebaseConstructorInterface = {
+      base64: Buffer.from(JSON.stringify({ project_id: 'test' })).toString('base64'),
+      auth: {
+        config: {} as any,
+      },
+    };
+    const localProvider = new FirebaseProvider(data);
+    // Access private property logic via a public method dependent on it, or mock property if possible.
+    // Since rolesKey is private, we can verify behavior of getClaimsRoleBase which uses it.
+    // But rolesKey logic is simple: this.data.auth?.config?.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
+    // Let's verify it explicitly if we can cast to any, or rely on coverage report.
+    expect((localProvider as any).rolesKey).toBe('roles'); // Default const value
+  });
+
   it('should be defined', () => {
     expect(provider).toBeDefined();
   });
@@ -131,6 +146,18 @@ describe('FirebaseProvider', () => {
       await provider.setClaimsRoleBase(uid, newRoles);
       expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith(uid, {
         ...existingClaims,
+        test: newRoles,
+      });
+    });
+
+    it('should handle undefined customClaims when setting role claims', async () => {
+      const uid = 'test-uid';
+      const newRoles = ['admin'];
+      mockAuth.getUser.mockResolvedValue({ customClaims: undefined });
+      mockAuth.setCustomUserClaims.mockResolvedValue(undefined);
+
+      await provider.setClaimsRoleBase(uid, newRoles);
+      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith(uid, {
         test: newRoles,
       });
     });

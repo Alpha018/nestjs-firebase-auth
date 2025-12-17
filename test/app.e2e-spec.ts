@@ -47,7 +47,7 @@ describe('UsersController (e2e)', () => {
     configService = app.get(ConfigService);
 
     const firebaseConfig = JSON.parse(
-      Buffer.from(configService.get<string>('FIREBASE_CLIENT_BASE64'), 'base64').toString('utf-8'),
+      Buffer.from(configService.get<string>('FIREBASE_CLIENT_BASE64') || '', 'base64').toString('utf-8'),
     );
 
     if (!firebase.getApps().length) {
