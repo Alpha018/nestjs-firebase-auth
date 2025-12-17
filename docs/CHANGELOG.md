@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.9.0...v1.9.1) (2025-12-17)
+
+
+### Bug Fixes
+
+* update migration guide version in README ([423cde9](https://github.com/Alpha018/nestjs-firebase-auth/commit/423cde985a84bc7598c0ecb41d4f746aeaae6ba0))
+
 # [1.9.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.8.1...v1.9.0) (2025-12-17)
 
 
