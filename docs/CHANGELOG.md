@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.8.1...v1.9.0) (2025-12-17)
+
+
+### Features
+
+* enhance decorators, optimize guard performance and enable strict mode ([acc85c4](https://github.com/Alpha018/nestjs-firebase-auth/commit/acc85c42a6f2f6ea1977bb861e60a4022948811d))
+
 ## [1.8.1](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.8.0...v1.8.1) (2025-12-14)
 
 
