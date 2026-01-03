@@ -55,6 +55,12 @@ jobs:
           cache: npm
           node-version: 24
 
+      - name: Sync Wiki
+        uses: Andrew-Chen-Wang/github-wiki-action@v4
+        with:
+          token: ${{ secrets.TOKEN_GITHUB }}
+          path: "docs/wiki"
+
       - name: install dependencies
         run: npm ci
 
