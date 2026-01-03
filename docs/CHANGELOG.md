@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.9.1...v1.10.0) (2026-01-03)
+
+
+### Features
+
+* upgrade libraries, add firestore e2e tests and create wiki ([5ad384f](https://github.com/Alpha018/nestjs-firebase-auth/commit/5ad384fd39a50694ddbaa8dfb8724b7506e50a6e)), closes [#4](https://github.com/Alpha018/nestjs-firebase-auth/issues/4)
+
 ## [1.9.1](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.9.0...v1.9.1) (2025-12-17)
 
 
