@@ -1,5 +1,6 @@
-import { Controller, UseGuards, HttpCode, Body, Post, Get } from '@nestjs/common';
+import { Controller, UseGuards, HttpCode, Query, Body, Post, Get } from '@nestjs/common';
 import { DecodedIdToken } from 'firebase-admin/lib/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
 import { FirebaseRolesClaims, FirebaseProvider, RolesGuard } from '../../src';
 import { FirebaseGuard } from '../../src';
@@ -12,7 +13,7 @@ export enum Roles {
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly firebaseProvider: FirebaseProvider) {}
+  constructor(private readonly firebaseProvider: FirebaseProvider) { }
 
   @Post('login')
   @HttpCode(200)
@@ -26,6 +27,21 @@ export class UsersController {
     }
 
     return { accessToken: token };
+  }
+
+  @Post('firestore/write')
+  @HttpCode(200)
+  async firestoreWrite(@Body() body: { collection: string; docId: string; data: any }) {
+    const firestore = getFirestore(this.firebaseProvider.app);
+    await firestore.collection(body.collection).doc(body.docId).set(body.data);
+    return { status: 'ok' };
+  }
+
+  @Get('firestore/read')
+  async firestoreRead(@Query('collection') collection: string, @Query('docId') docId: string) {
+    const firestore = getFirestore(this.firebaseProvider.app);
+    const doc = await firestore.collection(collection).doc(docId).get();
+    return doc.data();
   }
 
   @Post('set-role-claims')
@@ -47,6 +63,14 @@ export class UsersController {
   @Get('get-role-claims')
   async getRoleClaims(@FirebaseRolesClaims() claims: Roles[]) {
     return claims;
+  }
+
+  @Get('app-info')
+  getAppInfo() {
+    return {
+      options: this.firebaseProvider.app.options,
+      name: this.firebaseProvider.app.name,
+    };
   }
 
   @UseGuards(FirebaseGuard)

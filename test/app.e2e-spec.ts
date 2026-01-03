@@ -65,8 +65,42 @@ describe('UsersController (e2e)', () => {
     return userCredential.user.getIdToken();
   };
 
+  it('/users/app-info (GET - App Info)', async () => {
+    const result = await request(app.getHttpServer()).get('/users/app-info').expect(200);
+    const responseBody = result.body;
+    expect(responseBody).toHaveProperty('name');
+    expect(responseBody).toHaveProperty('options');
+  });
+
+  it('/users/firestore/write (POST - Write Doc)', async () => {
+    await request(app.getHttpServer())
+      .post('/users/firestore/write')
+      .send({
+        collection: 'test-collection',
+        data: { foo: 'bar' },
+        docId: 'test-doc',
+      })
+      .expect(200);
+  });
+
+  it('/users/firestore/read (GET - Read Doc)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/users/firestore/read')
+      .query({ collection: 'test-collection', docId: 'test-doc' })
+      .expect(200);
+
+    expect(response.body).toEqual({ foo: 'bar' });
+  });
+
   it('/users/me (GET - Forbidden)', async () => {
     await request(app.getHttpServer()).get('/users/me').expect(403);
+  });
+
+  it('/users/me (GET - Unauthorized)', async () => {
+    await request(app.getHttpServer())
+      .get('/users/me')
+      .set('Authorization', 'Bearer invalid-token')
+      .expect(403);
   });
 
   it('/users/login (POST - Ok)', async () => {
