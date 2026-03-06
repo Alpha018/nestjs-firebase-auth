@@ -1,22 +1,22 @@
-# Overview
+## 🏠 Overview
 
-* [Home](Home.md)
+- [[Home|Home]]
 
-# Getting Started
+## 🚀 Getting Started
 
-* [Installation](setup/Installation.md)
-* [Configuration](setup/Configuration.md)
+- [[Installation|Installation]]
+- [[Configuration|Configuration]]
 
-# Usage
+## 🛠 Usage
 
-* [Basic Usage](usage/Basic-Usage.md)
-* [Advanced Usage](usage/Advanced-Usage.md)
-* [Decorators](usage/Decorators.md)
+- [[Basic Usage|Basic-Usage]]
+- [[Advanced Usage|Advanced-Usage]]
+- [[Decorators|Decorators]]
 
-# Guides
+## 📚 Guides
 
-* [Migrations](guides/Migrations.md)
+- [[Migrations|Migrations]]
 
-# Community
+## 🫂 Community
 
-* [Contributing](contrib/Contributing.md)
+- [[Contributing|Contributing]]
