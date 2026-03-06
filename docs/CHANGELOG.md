@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.10.0...v1.11.0) (2026-03-06)
+
+
+### Features
+
+* enhance documentation and testing configuration ([834c410](https://github.com/Alpha018/nestjs-firebase-auth/commit/834c4104939c122214cc5b92981e200158e05efc))
+
 # [1.10.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.9.1...v1.10.0) (2026-01-03)
 
 
