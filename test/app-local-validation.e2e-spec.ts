@@ -148,7 +148,7 @@ describe('UsersController (e2e)', () => {
 
   it('/users/get-role-claims (GET - Get claims - 401)', async () => {
     const uid = configService.get(keyUserEnv);
-    let idToken = await loginAndGetIdToken(uid);
+    await loginAndGetIdToken(uid);
 
     await request(app.getHttpServer())
       .post('/users/set-role-claims')
@@ -156,7 +156,7 @@ describe('UsersController (e2e)', () => {
       .expect(200);
 
     // refresh local token
-    idToken = await loginAndGetIdToken(uid);
+    const idToken = await loginAndGetIdToken(uid);
     const response = await request(app.getHttpServer())
       .get('/users/get-role-claims')
       .set('Authorization', `Bearer ${idToken}`)
