@@ -1,6 +1,6 @@
 import { Controller, UseGuards, HttpCode, Query, Body, Post, Get } from '@nestjs/common';
-import { DecodedIdToken } from 'firebase-admin/lib/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { DecodedIdToken } from 'firebase-admin/auth';
 
 import { FirebaseRolesClaims, FirebaseProvider, RolesGuard } from '../../src';
 import { FirebaseGuard } from '../../src';

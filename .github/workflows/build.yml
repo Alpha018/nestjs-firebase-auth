@@ -7,24 +7,20 @@ on:
 
 jobs:
   test:
+    name: Unit tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [ 22.x, 24.x ]
-    env:
-      FIREBASE_TEST_USER: ${{ secrets.FIREBASE_TEST_USER }}
-      FIREBASE_TEST_USER_LOCAL: ${{ secrets.FIREBASE_TEST_USER_LOCAL }}
-      FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
-      FIREBASE_CLIENT_BASE64: ${{ secrets.FIREBASE_CLIENT_BASE64 }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.TOKEN_GITHUB }}
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -34,29 +30,84 @@ jobs:
       - name: Run tests
         run: npm run test
 
+  e2e:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 24.x ]
+    env:
+      FIREBASE_TEST_USER: ${{ secrets.FIREBASE_TEST_USER }}
+      FIREBASE_TEST_USER_LOCAL: ${{ secrets.FIREBASE_TEST_USER_LOCAL }}
+      FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+      FIREBASE_CLIENT_BASE64: ${{ secrets.FIREBASE_CLIENT_BASE64 }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.TOKEN_GITHUB }}
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: install dependencies
+        run: npm ci
+
       - name: Run e2e tests
         run: npm run test:e2e
+
+  compat:
+    name: Runtime compatibility
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 22.x, 24.x ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.TOKEN_GITHUB }}
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: build project
+        run: npm run build
+
+      - name: Verify the built package loads
+        run: npm run smoke
 
   release:
     runs-on: ubuntu-latest
     needs:
       - test
+      - e2e
+      - compat
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.TOKEN_GITHUB }}
           persist-credentials: true
           fetch-depth: 0
 
       - name: environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
           cache: npm
           node-version: 24
 
       - name: Sync Wiki
-        uses: Andrew-Chen-Wang/github-wiki-action@v4
+        uses: Andrew-Chen-Wang/github-wiki-action@v5
         with:
           token: ${{ secrets.TOKEN_GITHUB }}
           path: "docs/wiki"

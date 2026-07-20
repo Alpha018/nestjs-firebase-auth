@@ -1,6 +1,5 @@
-import { initializeApp, getApps, getApp, App } from 'firebase-admin/app';
-import { DecodedIdToken } from 'firebase-admin/lib/auth';
-import { getAuth } from 'firebase-admin/auth';
+import { initializeApp, getApps, getApp, cert, App } from 'firebase-admin/app';
+import { DecodedIdToken, getAuth } from 'firebase-admin/auth';
 import { Injectable } from '@nestjs/common';
 import * as fa from 'firebase-admin';
 
@@ -53,9 +52,7 @@ export class FirebaseProvider {
 
     if (data.base64) {
       appOptions = {
-        credential: fa.credential.cert(
-          JSON.parse(Buffer.from(data.base64, 'base64').toString('utf-8')),
-        ),
+        credential: cert(JSON.parse(Buffer.from(data.base64, 'base64').toString('utf-8'))),
       };
     } else if (data.options) {
       appOptions = data.options;

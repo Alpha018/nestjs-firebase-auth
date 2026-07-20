@@ -1,5 +1,5 @@
-import { DecodedIdToken } from 'firebase-admin/lib/auth';
 import { TestingModule, Test } from '@nestjs/testing';
+import { DecodedIdToken } from 'firebase-admin/auth';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 

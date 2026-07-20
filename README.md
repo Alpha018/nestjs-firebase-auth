@@ -32,13 +32,18 @@
   - [Parameter Options](#parameter-options)
   - [Auth Guard Without Role Validation](#auth-guard-without-role-validation)
   - [Auth Guard With Role Validation](#auth-guard-with-role-validation)
+  - [Controller-Level Authentication with Method-Level Authorization](#controller-level-authentication-with-method-level-authorization)
   - [Additional Information](#additional-information)
+- [Migration Guide (v2.0.0)](#migration-guide-v200)
+- [Migration Guide (v1.9.x)](#migration-guide-v19x)
 - [Documentation](#documentation)
 - [Resources](#resources)
 - [Stay in touch](#stay-in-touch)
 - [License](#license)
 
-> **⚠️ Important:** Starting from this version, the minimum required Node.js version is **20**, due to the Firebase Admin SDK v12 upgrade.
+> **⚠️ Breaking change in v2.0.0:** the minimum required Node.js version is now **22.12**, and the
+> bundled Firebase Admin SDK moved to **v14**. See the [v2.0.0 Migration Guide](#migration-guide-v200)
+> before upgrading.
 
 ## Installation
 
@@ -210,7 +215,7 @@ import {
   Roles,
 } from '@alpha018/nestjs-firebase-auth';
 
-import { auth } from 'firebase-admin';
+import { DecodedIdToken } from 'firebase-admin/auth';
 
 enum Roles {
   ADMIN,
@@ -226,7 +231,7 @@ export class AppController {
   @Roles(Roles.ADMIN, Roles.USER)
   @Get()
   async mainFunction(
-    @FirebaseUser() user: auth.DecodedIdToken,
+    @FirebaseUser() user: DecodedIdToken,
     @FirebaseRolesClaims() claims: Roles[],
   ) {
     return {
@@ -237,14 +242,29 @@ export class AppController {
 }
 ```
 
-#### Difference Between `@FirebaseUser` and `@FirebaseUserClaims`
+#### Difference Between `@FirebaseUser` and `@FirebaseRolesClaims`
 
 > **Note:** Starting from version `>=1.7.x`, these two decorators are explicitly separated to avoid confusion (see [issue #11](https://github.com/Alpha018/nestjs-firebase-auth/issues/11)):
 
-- `@FirebaseUser()` → Returns the **full decoded token** (`auth.DecodedIdToken`).
-- `@FirebaseUserClaims()` → Returns only the **custom role claims** (roles/permissions) defined for the user.
+- `@FirebaseUser()` → Returns the **full decoded token** (`DecodedIdToken`).
+- `@FirebaseRolesClaims()` → Returns only the **custom role claims** (roles/permissions) defined for the user.
+
+> `@FirebaseUserClaims()` is a deprecated alias of `@FirebaseRolesClaims()`. It still works and
+> returns the same value, but new code should use `@FirebaseRolesClaims()`.
 
 This separation ensures that developers can access both the raw Firebase user object and the role/claims information independently.
+
+## Migration Guide (v2.0.0)
+
+`v2.0.0` upgrades the bundled Firebase Admin SDK from v13 to **v14**. This library's own API is
+unchanged; the breaking changes come from the SDK:
+
+| Change | Action required |
+|---|---|
+| Minimum Node.js is now `22.12` | Upgrade your runtime — Node.js 20 is end-of-life |
+| `auth` namespace removed from the `firebase-admin` root | Import `DecodedIdToken` from `firebase-admin/auth` |
+
+**➡️ Full details, including Jest configuration, are in the [Migrations guide](docs/wiki/guides/Migrations.md).**
 
 ## Migration Guide (v1.9.x)
 
