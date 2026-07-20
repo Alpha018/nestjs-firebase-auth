@@ -1,3 +1,23 @@
+# [2.0.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.11.0...v2.0.0) (2026-07-20)
+
+
+* feat!: upgrade firebase-admin to v14 and typescript to v6 ([8246007](https://github.com/Alpha018/nestjs-firebase-auth/commit/82460071ce5fc8730a5ca5d6ebdc8cf68b9e6ae6))
+
+
+### BREAKING CHANGES
+
+* the minimum supported Node.js version is now 22.12.0.
+firebase-admin v14 drops Node.js 18 and 20, and depends on the ESM-only `jose`
+package, which requires `require(ESM)` support. Node.js 20 reached end-of-life
+on 2026-04-30.
+
+Consumers who type parameters with `auth.DecodedIdToken` imported from the
+`firebase-admin` root must switch to `DecodedIdToken` from `firebase-admin/auth`.
+This library's own API is unchanged.
+
+Running the test suite additionally requires Node.js 24.9+, because Jest needs
+the synchronous vm module APIs to load `jose` from CommonJS.
+
 # [1.11.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.10.0...v1.11.0) (2026-03-06)
 
 
