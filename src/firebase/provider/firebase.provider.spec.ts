@@ -1,7 +1,5 @@
-import { initializeApp, getApps, getApp } from 'firebase-admin/app';
-import { DecodedIdToken } from 'firebase-admin/lib/auth';
-import { getAuth } from 'firebase-admin/auth';
-import * as fa from 'firebase-admin';
+import { initializeApp, getApps, getApp, cert } from 'firebase-admin/app';
+import { DecodedIdToken, getAuth } from 'firebase-admin/auth';
 
 import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
 import { userDecode } from '../__mocks__/firebase-user-mock';
@@ -11,16 +9,11 @@ jest.mock('firebase-admin/app', () => ({
   initializeApp: jest.fn(),
   getApps: jest.fn(),
   getApp: jest.fn(),
+  cert: jest.fn(),
 }));
 
 jest.mock('firebase-admin/auth', () => ({
   getAuth: jest.fn(),
-}));
-
-jest.mock('firebase-admin', () => ({
-  credential: {
-    cert: jest.fn(),
-  },
 }));
 
 describe('FirebaseProvider', () => {
@@ -38,7 +31,7 @@ describe('FirebaseProvider', () => {
     (getApps as jest.Mock).mockReturnValue([mockApp]);
     (getApp as jest.Mock).mockReturnValue(mockApp);
     (getAuth as jest.Mock).mockReturnValue(mockAuth);
-    (fa.credential.cert as jest.Mock).mockReturnValue({});
+    (cert as jest.Mock).mockReturnValue({});
 
     const data: FirebaseConstructorInterface = {
       base64: Buffer.from(JSON.stringify({ project_id: 'test' })).toString('base64'),

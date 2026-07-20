@@ -2,8 +2,11 @@
 
 ## Prerequisites
 
-- Node.js (>= 20)
+- Node.js (>= 22.12) — required by the Firebase Admin SDK v14, which drops Node.js 18 and 20
 - NestJS (>= 9)
+
+> **Upgrading from v1.x?** The Node.js requirement changed in v2.0.0, and one import has to be
+> updated. See [[Migrations|Migrations]] for the details, including how to configure Jest.
 
 ## Steps
 

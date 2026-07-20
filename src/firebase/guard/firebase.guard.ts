@@ -1,5 +1,5 @@
 import { ExecutionContext, CanActivate, Injectable, Inject } from '@nestjs/common';
-import { DecodedIdToken } from 'firebase-admin/lib/auth';
+import { DecodedIdToken } from 'firebase-admin/auth';
 import { ExtractJwt } from 'passport-jwt';
 import { Reflector } from '@nestjs/core';
 

@@ -4,7 +4,7 @@ import { TestingModule, Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { ExtractJwt } from 'passport-jwt';
 import * as firebase from 'firebase/app';
-import * as request from 'supertest';
+import request from 'supertest';
 
 import { OptimizationController, OptimizationRoles } from './controller/optimization.controller';
 import { FirebaseAdminModule, FirebaseProvider } from '../src';

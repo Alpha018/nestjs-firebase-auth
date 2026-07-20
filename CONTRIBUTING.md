@@ -2,6 +2,24 @@
 
 Thank you for your interest in contributing to nestjs-firebase-auth! We appreciate your contributions and want to make the process as smooth as possible. Please follow these guidelines to ensure your contributions are integrated seamlessly into the project.
 
+## Local Setup
+
+The unit suite (`npm test`) and the library itself run on **Node.js 22.12 or newer**. The e2e suite
+(`npm run test:e2e`) additionally requires **Node.js 24.9 or newer**. An `.nvmrc` is included, so:
+
+```bash
+nvm use
+npm ci
+```
+
+> **Why do the e2e tests need 24.9?** They reach a real Firebase project, which loads
+> google-auth-library, and that performs a dynamic `import()` Jest can only resolve with
+> `--experimental-vm-modules`. That same flag makes Jest treat `jose` — an ESM-only package
+> firebase-admin v14 pulls in through jwks-rsa — as ESM, which it can only require from CommonJS on
+> Node 24.9+. The two requirements cannot both be met on Node 22. The unit suite avoids this because
+> it transpiles `jose` to CommonJS and never reaches google-auth-library, so it runs on both. The
+> `test:e2e` script checks your version up front and explains this if it is too old.
+
 ## How to Contribute
 
 1. **Open an Issue:** Before starting work on a new feature or bug fix, we recommend opening an issue to discuss your ideas with the development team. This will help us ensure that your changes align with the project's vision and avoid duplicated efforts.
