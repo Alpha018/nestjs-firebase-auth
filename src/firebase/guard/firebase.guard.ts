@@ -1,6 +1,6 @@
 import { ExecutionContext, CanActivate, Injectable, Inject } from '@nestjs/common';
+import { JwtFromRequestFunction, ExtractJwt } from 'passport-jwt';
 import { DecodedIdToken } from 'firebase-admin/auth';
-import { ExtractJwt } from 'passport-jwt';
 import { Reflector } from '@nestjs/core';
 
 import {
@@ -31,12 +31,18 @@ export class FirebaseGuard implements CanActivate {
    * @param config Firebase Admin SDK configuration.
    * @param reflector Utility to retrieve metadata (roles) from route handlers.
    */
+  /** Token extractor resolved once at construction to avoid rebuilding it per request. */
+  private readonly extractor: JwtFromRequestFunction;
+
   constructor(
     private readonly firebaseProvider: FirebaseProvider,
     @Inject(FIREBASE_ADMIN_CONFIG)
     private readonly config: FirebaseConstructorInterface,
     private readonly reflector: Reflector,
-  ) {}
+  ) {
+    this.extractor =
+      this.config.auth?.config?.extractor ?? ExtractJwt.fromAuthHeaderAsBearerToken();
+  }
 
   /**
    * Validates incoming requests based on Firebase authentication and optional role requirements.
@@ -133,17 +139,6 @@ export class FirebaseGuard implements CanActivate {
   }
 
   /**
-   * Extracts a JWT token from the Authorization header.
-   * @param request The HTTP request object.
-   * @returns The extracted token or `null` if not present.
-   */
-  private extractTokenFromRequest(request: any): string | null {
-    const extractor =
-      this.config.auth?.config?.extractor || ExtractJwt.fromAuthHeaderAsBearerToken();
-    return extractor(request);
-  }
-
-  /**
    * Attaches the decoded user token to the request metadata.
    * @param request The request object.
    * @param user The decoded Firebase ID token.
@@ -159,5 +154,14 @@ export class FirebaseGuard implements CanActivate {
    */
   private attachClaimsToRequest(request: any, claims: unknown): void {
     request.metadata = { ...request.metadata, [FIREBASE_CLAIMS_USER_METADATA]: { claims } };
+  }
+
+  /**
+   * Extracts a JWT token from the Authorization header.
+   * @param request The HTTP request object.
+   * @returns The extracted token or `null` if not present.
+   */
+  private extractTokenFromRequest(request: any): string | null {
+    return this.extractor(request);
   }
 }
