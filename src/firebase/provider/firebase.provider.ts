@@ -1,7 +1,6 @@
-import { initializeApp, getApps, getApp, cert, App } from 'firebase-admin/app';
+import { initializeApp, AppOptions, getApps, getApp, cert, App } from 'firebase-admin/app';
 import { DecodedIdToken, getAuth } from 'firebase-admin/auth';
 import { Injectable } from '@nestjs/common';
-import * as fa from 'firebase-admin';
 
 import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
 import { FIREBASE_APP_ROLES_DEFAULT_DECORATOR } from '../constant/firebase.constant';
@@ -48,7 +47,7 @@ export class FirebaseProvider {
       return;
     }
 
-    let appOptions: fa.AppOptions | undefined;
+    let appOptions: AppOptions | undefined;
 
     if (data.base64) {
       appOptions = {

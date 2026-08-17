@@ -150,9 +150,13 @@ describe('FirebaseGuard', () => {
 
     it('should use custom extractor if provided', async () => {
       const customExtractor = jest.fn().mockReturnValue('custom_token');
-      (guard as any).config.auth = { config: { extractor: customExtractor } };
+      const guardWithExtractor = new FirebaseGuard(
+        firebaseProvider as any,
+        { auth: { config: { extractor: customExtractor } } } as any,
+        reflector as any,
+      );
 
-      await guard.canActivate(context);
+      await guardWithExtractor.canActivate(context);
 
       expect(customExtractor).toHaveBeenCalledWith(request);
     });
