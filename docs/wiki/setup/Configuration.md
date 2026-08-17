@@ -69,5 +69,5 @@ export class AppModule {}
 | `checkRevoked` | `boolean` | `false` | Whether to check if the ID token has been revoked by the user (requires extra network call). |
 | `validateRole` | `boolean` | `false` | If true, enables role validation logic via `@Roles` decorator. |
 | `rolesClaimKey` | `string` | `'roles'` | The key in the Custom Claims object that holds the user's role(s). |
-| `useLocalRoles` | `boolean` | `false` | If true, the guard will look for roles directly in the decoded token payload instead of making a network call to fetch the user record's custom claims. Faster but potentially less fresh. |
+| `useLocalRoles` | `boolean` | `false` | If true, the guard reads roles directly from the decoded token payload instead of calling `getUser()` to fetch the user record's custom claims. The default (`false`) adds one Firebase round-trip per request on `@Roles()` routes; `true` avoids it but serves roles that stay stale until the client's token is refreshed. |
 | `extractor` | `JwtFromRequestFunction` | `Bearer Token` | Custom JWT extractor function (from `passport-jwt`). |

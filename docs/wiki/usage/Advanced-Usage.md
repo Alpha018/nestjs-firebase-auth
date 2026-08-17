@@ -64,6 +64,9 @@ You can choose how roles are validated:
 - **Remote (Default)**: Fetches the latest user record from Firebase to check claims. This ensures the most up-to-date roles but adds a network call.
 - **Local (`useLocalRoles: true`)**: Checks the roles present in the decoded ID token. This is faster but requires the token to be refreshed on the client side after roles are changed.
 
+> [!IMPORTANT]
+> The remote strategy runs an extra `getUser()` call to Firebase on **every request** that hits a `@Roles()` route, on top of the token verification the guard already performs. The role claims are already embedded in the verified ID token, so `useLocalRoles: true` serves them without that round-trip. Prefer local validation on latency-sensitive routes and keep the remote default only when you need role changes to take effect before the client's token expires (up to ~1 hour).
+
 > [!NOTE]
 > Regardless of the strategy, the `@Auth()` decorator is required to trigger the validation logic.
 
