@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/Alpha018/nestjs-firebase-auth/compare/v2.0.0...v2.0.1) (2026-08-17)
+
+
+### Performance Improvements
+
+* **guard:** resolve JWT extractor once and drop root firebase-admin import ([708817a](https://github.com/Alpha018/nestjs-firebase-auth/commit/708817af7c9a24594c5469f3749a9b143be0eda7))
+
 # [2.0.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v1.11.0...v2.0.0) (2026-07-20)
 
 
