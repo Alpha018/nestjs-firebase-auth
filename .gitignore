@@ -47,6 +47,16 @@ lerna-debug.log*
 .temp
 .tmp
 
+# Claude Code (local, untracked)
+CLAUDE.md
+AGENTS.md
+.claude/
+.agents/
+.codegraph/
+.qmd/
+skills-lock.json
+.mcp.json
+
 # Runtime data
 pids
 *.pid
