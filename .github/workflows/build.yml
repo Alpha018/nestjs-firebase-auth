@@ -88,6 +88,11 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      issues: write
+      pull-requests: write
     needs:
       - test
       - e2e
@@ -106,6 +111,9 @@ jobs:
           cache: npm
           node-version: 24
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Sync Wiki
         uses: Andrew-Chen-Wang/github-wiki-action@v5
         with:
@@ -121,5 +129,4 @@ jobs:
       - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
