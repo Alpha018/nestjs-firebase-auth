@@ -1,8 +1,8 @@
 # NestJS Firebase Auth
 
 <div align="center">
-  <a href="http://nestjs.com/" target="_blank">
-    <img src="https://nestjs.com/img/logo_text.svg" width="150" alt="Nest Logo" />
+  <a href="https://nestjs.com/" target="_blank">
+    <img src="https://docs.nestjs.com/assets/logo_text.svg" width="150" alt="Nest Logo" />
   </a>
 </div>
 
@@ -17,7 +17,7 @@
     <img src="https://img.shields.io/badge/built%20with-NestJs-red.svg" alt="Built with NestJS">
   </a>
   <a href="https://github.com/Alpha018/nestjs-firebase-auth/actions">
-    <img src="https://github.com/Alpha018/nestjs-firebase-auth/actions/workflows/build.yml/badge.svg" alt="Test Status">
+    <img src="https://github.com/Alpha018/nestjs-firebase-auth/actions/workflows/test.yml/badge.svg" alt="Test Status">
   </a>
   <a href="https://github.com/Alpha018/nestjs-firebase-auth">
     <img src="https://img.shields.io/github/stars/Alpha018/nestjs-firebase-auth?style=social" alt="GitHub stars">
