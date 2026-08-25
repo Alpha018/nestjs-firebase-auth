@@ -13,6 +13,12 @@ var EXPECTED_EXPORTS = [
   'FirebaseRolesClaims',
   'Auth',
   'Roles',
+  'FirebaseAuthErrorCode',
+  'TokenNotFoundException',
+  'TokenInvalidException',
+  'TokenExpiredException',
+  'TokenRevokedException',
+  'InsufficientRoleException',
 ];
 
 var lib = require(distPath);

@@ -92,15 +92,15 @@ describe('UsersController (e2e)', () => {
     expect(response.body).toEqual({ foo: 'bar' });
   });
 
-  it('/users/me (GET - Forbidden)', async () => {
-    await request(app.getHttpServer()).get('/users/me').expect(403);
+  it('/users/me (GET - Unauthorized - No Token)', async () => {
+    await request(app.getHttpServer()).get('/users/me').expect(401);
   });
 
-  it('/users/me (GET - Unauthorized)', async () => {
+  it('/users/me (GET - Unauthorized - Invalid Token)', async () => {
     await request(app.getHttpServer())
       .get('/users/me')
       .set('Authorization', 'Bearer invalid-token')
-      .expect(403);
+      .expect(401);
   });
 
   it('/users/login (POST - Ok)', async () => {
@@ -180,7 +180,7 @@ describe('UsersController (e2e)', () => {
     expect(response.body).toEqual(expect.objectContaining(mockClaims));
   });
 
-  it('/users/get-role-claims (GET - Get claims - 401)', async () => {
+  it('/users/get-role-claims (GET - Get claims - 403)', async () => {
     const uid = configService.get(keyUserEnv);
     const idToken = await loginAndGetIdToken(uid);
 

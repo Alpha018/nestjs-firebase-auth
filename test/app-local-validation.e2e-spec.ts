@@ -65,8 +65,8 @@ describe('UsersController (e2e)', () => {
     return userCredential.user.getIdToken();
   };
 
-  it('/users/me (GET - Forbidden)', async () => {
-    await request(app.getHttpServer()).get('/users/me').expect(403);
+  it('/users/me (GET - Unauthorized - No Token)', async () => {
+    await request(app.getHttpServer()).get('/users/me').expect(401);
   });
 
   it('/users/login (POST - Ok)', async () => {

@@ -3,6 +3,13 @@ import { DecodedIdToken } from 'firebase-admin/auth';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
+import {
+  InsufficientRoleException,
+  TokenNotFoundException,
+  TokenExpiredException,
+  TokenRevokedException,
+  TokenInvalidException,
+} from '../error/firebase-auth.exception';
 import { FIREBASE_TOKEN_USER_METADATA, FIREBASE_ADMIN_CONFIG } from '../constant/firebase.constant';
 import { FirebaseProvider } from '../provider/firebase.provider';
 import { FirebaseGuard } from './firebase.guard';
@@ -16,7 +23,7 @@ class FirebaseProviderMock {
 }
 
 class ReflectorMock {
-  get = jest.fn();
+  getAllAndOverride = jest.fn();
 }
 
 describe('FirebaseGuard', () => {
@@ -57,6 +64,7 @@ describe('FirebaseGuard', () => {
           getRequest: () => request,
         }),
         getHandler: jest.fn(),
+        getClass: jest.fn(),
       } as any;
     });
 
@@ -73,27 +81,31 @@ describe('FirebaseGuard', () => {
       expect(result).toBe(true);
     });
 
-    it('should return false if no token is found', async () => {
+    it('should throw TokenNotFoundException if no token is found', async () => {
       // Ensure headers object exists but authorization is missing/undefined
       request.headers = {};
-      const result = await guard.canActivate(context);
-      expect(result).toBe(false);
+      await expect(guard.canActivate(context)).rejects.toBeInstanceOf(TokenNotFoundException);
     });
 
-    it('should return false if token verification fails', async () => {
+    it('should throw TokenExpiredException when the SDK reports an expired token', async () => {
+      request.headers.authorization = 'Bearer expired_token';
+      firebaseProvider.auth.verifyIdToken.mockRejectedValue({ code: 'auth/id-token-expired' });
+
+      await expect(guard.canActivate(context)).rejects.toBeInstanceOf(TokenExpiredException);
+    });
+
+    it('should throw TokenRevokedException when the SDK reports a revoked token', async () => {
+      request.headers.authorization = 'Bearer revoked_token';
+      firebaseProvider.auth.verifyIdToken.mockRejectedValue({ code: 'auth/id-token-revoked' });
+
+      await expect(guard.canActivate(context)).rejects.toBeInstanceOf(TokenRevokedException);
+    });
+
+    it('should throw TokenInvalidException for unrecognized verification failures', async () => {
       request.headers.authorization = 'Bearer invalid_token';
       firebaseProvider.auth.verifyIdToken.mockRejectedValue(new Error('Token verification failed'));
 
-      const result = await guard.canActivate(context);
-      expect(result).toBe(false);
-    });
-
-    it('should return false if token verification returns null', async () => {
-      request.headers.authorization = bearerToken;
-      firebaseProvider.auth.verifyIdToken.mockResolvedValue(null as any);
-
-      const result = await guard.canActivate(context);
-      expect(result).toBe(false);
+      await expect(guard.canActivate(context)).rejects.toBeInstanceOf(TokenInvalidException);
     });
 
     it('should return true if validateRole is false', async () => {
@@ -108,7 +120,7 @@ describe('FirebaseGuard', () => {
     it('should return true if no roles are defined', async () => {
       request.headers.authorization = bearerToken;
       firebaseProvider.auth.verifyIdToken.mockResolvedValue({} as DecodedIdToken);
-      reflector.get.mockReturnValue(undefined);
+      reflector.getAllAndOverride.mockReturnValue(undefined);
 
       const result = await guard.canActivate(context);
       expect(result).toBe(true);
@@ -117,35 +129,48 @@ describe('FirebaseGuard', () => {
     it('should return true if user has required role', async () => {
       request.headers.authorization = bearerToken;
       firebaseProvider.auth.verifyIdToken.mockResolvedValue({ uid: 'user_id' } as DecodedIdToken);
-      reflector.get.mockReturnValue(['admin']);
+      reflector.getAllAndOverride.mockReturnValue(['admin']);
       firebaseProvider.getClaimsRoleBase.mockResolvedValue(['user', 'admin']);
 
       const result = await guard.canActivate(context);
       expect(result).toBe(true);
     });
 
-    it('should return false if user does not have required role', async () => {
+    it('should throw InsufficientRoleException if user does not have required role', async () => {
       request.headers.authorization = bearerToken;
       firebaseProvider.auth.verifyIdToken.mockResolvedValue({ uid: 'user_id' } as DecodedIdToken);
-      reflector.get.mockReturnValue(['admin']);
+      reflector.getAllAndOverride.mockReturnValue(['admin']);
       firebaseProvider.getClaimsRoleBase.mockResolvedValue(['user']);
 
       (guard as any).config.auth = { config: { validateRole: true } };
 
-      const result = await guard.canActivate(context);
-      expect(result).toBe(false);
+      await expect(guard.canActivate(context)).rejects.toBeInstanceOf(InsufficientRoleException);
     });
 
-    it('should return false if user has no roles (roles undefined) but roles are required', async () => {
+    it('should throw InsufficientRoleException if user has no roles (roles undefined) but roles are required', async () => {
       request.headers.authorization = bearerToken;
       firebaseProvider.auth.verifyIdToken.mockResolvedValue({ uid: 'user_id' } as DecodedIdToken);
-      reflector.get.mockReturnValue(['admin']);
+      reflector.getAllAndOverride.mockReturnValue(['admin']);
       firebaseProvider.getClaimsRoleBase.mockResolvedValue(undefined); // Simulate no roles
 
       (guard as any).config.auth = { config: { validateRole: true } };
 
-      const result = await guard.canActivate(context);
-      expect(result).toBe(false);
+      await expect(guard.canActivate(context)).rejects.toBeInstanceOf(InsufficientRoleException);
+    });
+
+    it('should apply @Roles() metadata defined at the controller class level', async () => {
+      request.headers.authorization = bearerToken;
+      firebaseProvider.auth.verifyIdToken.mockResolvedValue({ uid: 'user_id' } as DecodedIdToken);
+      firebaseProvider.getClaimsRoleBase.mockResolvedValue(['admin']);
+      (guard as any).config.auth = { config: { validateRole: true } };
+
+      reflector.getAllAndOverride.mockReturnValue(['admin']);
+      await guard.canActivate(context);
+
+      expect(reflector.getAllAndOverride).toHaveBeenCalledWith(expect.any(String), [
+        context.getHandler(),
+        context.getClass(),
+      ]);
     });
 
     it('should use custom extractor if provided', async () => {

@@ -103,6 +103,40 @@ Tests that reach Firebase for real — rather than mocking it — additionally r
 
 Mocking `firebase-admin/auth` in your unit tests avoids all of the above.
 
+## Upgrading from v2.x to v3.0.0
+
+`FirebaseGuard` used to collapse every authentication and authorization failure into a boolean, which Nest always turned into a **403 Forbidden**. That conflated "you didn't send valid credentials" (401) with "you're authenticated but not allowed" (403), and silently swallowed the underlying Firebase Admin SDK error.
+
+`v3.0.0` replaces the boolean result with typed exceptions:
+
+| Failure | Before | After |
+|---|---|---|
+| No token in the request | `403` | `401` (`TokenNotFoundException`) |
+| Invalid / malformed token | `403` | `401` (`TokenInvalidException`) |
+| Expired token | `403` | `401` (`TokenExpiredException`) |
+| Revoked token (`checkRevoked: true`) | `403` | `401` (`TokenRevokedException`) |
+| Missing required role | `403` | `403` (`InsufficientRoleException`, unchanged status) |
+
+Every exception extends `FirebaseAuthException` and responds with a stable `code` field (see `FirebaseAuthErrorCode`) alongside the message, so you can branch on the failure reason instead of parsing text:
+
+```typescript
+{ "statusCode": 401, "code": "FIREBASE_AUTH_TOKEN_EXPIRED", "message": "The authentication token has expired" }
+```
+
+### Action required
+
+If your application or its tests assert a `403` for requests with a missing or invalid token, update those assertions to `401`. Requests that are authenticated but lack the required role keep returning `403`, unchanged.
+
+```typescript
+// Before
+await request(app).get('/protected').expect(403);
+
+// After (v3.0.0+) — no/invalid token now reports 401
+await request(app).get('/protected').expect(401);
+```
+
+If you need to react to a specific failure, catch the typed exception (or check `error.code` against `FirebaseAuthErrorCode`) instead of relying on the status code alone.
+
 ## Future Breaking Changes
 
 In a future major version, the `FirebaseGuard` class export may be removed or made internal. It is still exported in `v2.0.0`. Please migrate to the `@Auth()` and `@Roles()` decorators.
