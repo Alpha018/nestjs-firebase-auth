@@ -1,3 +1,33 @@
+# [3.0.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v2.0.1...v3.0.0) (2026-08-26)
+
+
+* fix(firebase-guard)!: replace boolean auth failures with typed 401/403 exceptions ([c9d6cdc](https://github.com/Alpha018/nestjs-firebase-auth/commit/c9d6cdc905d226a9a0f1dee72b41969f79bcc0a0))
+* refactor(firebase-guard)!: drop RolesGuard, FirebaseUserClaims and the FirebaseGuard export ([b81ccce](https://github.com/Alpha018/nestjs-firebase-auth/commit/b81ccce59cbef276de4a82693bee0b44cec0cacf))
+
+
+### Bug Fixes
+
+* **exports:** drop stale FirebaseGuard from smoke test, export ClaimsGuard ([6576166](https://github.com/Alpha018/nestjs-firebase-auth/commit/65761668d8358946db26afa7e53cbaa816e303a7))
+* **firebase-admin-module:** resolve FirebaseGuard dependencies in forRoot ([bd65d42](https://github.com/Alpha018/nestjs-firebase-auth/commit/bd65d425403369587ffa1c822efaf9f5bfa09220))
+* **guards:** harden guards and provider against null/undefined inputs ([4b113ce](https://github.com/Alpha018/nestjs-firebase-auth/commit/4b113ce665ee237bc92d231dcf72bef6a6fd0f7d))
+* **policy:** populate PolicyContext.claims without requiring @Roles() ([33a98bc](https://github.com/Alpha018/nestjs-firebase-auth/commit/33a98bcd2bf78a49f3adb59ac022093bd9f4dfee))
+
+
+### Features
+
+* **claims:** add claim-based authorization ([2e5ba28](https://github.com/Alpha018/nestjs-firebase-auth/commit/2e5ba2825aebc861e2fed4c458dde714d0bbf969))
+* **policy:** add ABAC policy-based authorization ([b247042](https://github.com/Alpha018/nestjs-firebase-auth/commit/b2470420abb497829a3aa2a8212723341428dcc5))
+
+
+### BREAKING CHANGES
+
+* RolesGuard(...), FirebaseUserClaims() and the FirebaseGuard
+class are no longer exported. Use @Roles(...), @FirebaseRolesClaims() and
+@Auth()/@Roles(...) instead. See docs/wiki/guides/Migrations.md.
+* requests with a missing or invalid token now respond 401
+instead of 403. See docs/wiki/guides/Migrations.md for the full mapping
+and an upgrade example.
+
 ## [2.0.1](https://github.com/Alpha018/nestjs-firebase-auth/compare/v2.0.0...v2.0.1) (2026-08-17)
 
 
