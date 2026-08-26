@@ -22,12 +22,8 @@ import { FirebaseProvider } from '../provider/firebase.provider';
  * Class FirebaseGuard
  * @description A NestJS Guard that validates Firebase authentication tokens and checks role-based access.
  *
- * @deprecated Use `@Auth` or `@Roles` decorators instead of using this guard directly.
- * The `FirebaseGuard` class export will be removed in the next major version.
- *
- * Example replacement:
- * - `@UseGuards(FirebaseGuard)` -> `@Auth()`
- * - `@UseGuards(FirebaseGuard)` + `@Roles(...)` -> `@Roles(...)`
+ * Internal implementation detail, no longer part of the public API — use `@Auth` or `@Roles`
+ * instead of applying it directly with `@UseGuards`.
  */
 export class FirebaseGuard implements CanActivate {
   /**

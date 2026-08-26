@@ -22,12 +22,3 @@ export const ClaimsFactory = (data: unknown, ctx: ExecutionContext) => {
  * The specific claims returned depend on the `rolesClaimKey` configuration.
  */
 export const FirebaseRolesClaims = createParamDecorator(ClaimsFactory);
-
-/**
- * Parameter decorator to access a user’s Firebase claims.
- *
- * @deprecated Use `@FirebaseRolesClaims()` instead for better clarity.
- * This decorator is kept for backward compatibility and functions identically
- * to `@FirebaseRolesClaims`.
- */
-export const FirebaseUserClaims = createParamDecorator(ClaimsFactory);

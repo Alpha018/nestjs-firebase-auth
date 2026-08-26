@@ -1,10 +1,10 @@
 import { FIREBASE_APP_ROLES_DECORATOR } from '../constant/firebase.constant';
-import { RolesGuard } from './role.decorator';
+import { Roles } from './role.decorator';
 
-describe('RolesGuard', () => {
+describe('Roles', () => {
   it('should set metadata with roles', () => {
     const roles = ['admin', 'user'];
-    const decorator = RolesGuard(...roles);
+    const decorator = Roles(...roles);
 
     function testFunction() {}
 
@@ -15,7 +15,7 @@ describe('RolesGuard', () => {
   });
 
   it('should handle no roles', () => {
-    const decorator = RolesGuard();
+    const decorator = Roles();
 
     function testFunction() {}
 

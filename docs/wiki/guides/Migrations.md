@@ -137,6 +137,27 @@ await request(app).get('/protected').expect(401);
 
 If you need to react to a specific failure, catch the typed exception (or check `error.code` against `FirebaseAuthErrorCode`) instead of relying on the status code alone.
 
-## Future Breaking Changes
+### Removal of deprecated guards and decorators
 
-In a future major version, the `FirebaseGuard` class export may be removed or made internal. It is still exported in `v2.0.0`. Please migrate to the `@Auth()` and `@Roles()` decorators.
+`v3.0.0` also removes the APIs that were marked `@deprecated` in earlier versions:
+
+| Removed | Replacement |
+|---|---|
+| `RolesGuard(...)` | `@Roles(...)` |
+| `FirebaseUserClaims()` | `@FirebaseRolesClaims()` |
+| `FirebaseGuard` (public export) | `@Auth()` or `@Roles(...)` |
+
+`FirebaseGuard` still exists internally — it's what `@Auth()` and `@Roles()` apply under the hood — but it's no longer exported from the package, so `import { FirebaseGuard } from '@alpha018/nestjs-firebase-auth'` stops compiling. Replace any direct `@UseGuards(FirebaseGuard)` usage with `@Auth()`, and `@UseGuards(FirebaseGuard) @RolesGuard(...)` with `@Roles(...)`.
+
+```typescript
+// Before
+@UseGuards(FirebaseGuard)
+@RolesGuard(Roles.ADMIN)
+@Get('r')
+route() {}
+
+// After (v3.0.0+)
+@Roles(Roles.ADMIN)
+@Get('r')
+route() {}
+```

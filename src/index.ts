@@ -12,5 +12,4 @@ export * from './firebase/decorator/role.decorator';
 export * from './firebase/decorator/auth.decorator';
 export * from './firebase/decorator/user.decorator';
 export * from './firebase/firebase-admin.module';
-export * from './firebase/guard/firebase.guard';
 export * from './firebase/policy/policy.guard';

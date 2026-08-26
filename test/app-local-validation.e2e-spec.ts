@@ -6,7 +6,7 @@ import { ExtractJwt } from 'passport-jwt';
 import * as firebase from 'firebase/app';
 import request from 'supertest';
 
-import { UsersController, Roles } from './controller/user.controller';
+import { UsersController, AppRole } from './controller/user.controller';
 import { mockClaims } from './__mock__/custom-claims';
 import { FirebaseAdminModule } from '../src';
 
@@ -114,7 +114,7 @@ describe('UsersController (e2e)', () => {
     const uid = configService.get(keyUserEnv);
     const response = await request(app.getHttpServer())
       .post('/users/set-role-claims')
-      .send({ claim: Roles.ADMIN, uid })
+      .send({ claim: AppRole.ADMIN, uid })
       .expect(200);
 
     const responseBody = response.body;
@@ -143,7 +143,7 @@ describe('UsersController (e2e)', () => {
       .expect(200);
 
     const responseBody = response.body;
-    expect(responseBody).toHaveProperty([Roles.ADMIN]);
+    expect(responseBody).toHaveProperty([AppRole.ADMIN]);
   });
 
   it('/users/get-role-claims (GET - Get claims - 401)', async () => {
@@ -152,7 +152,7 @@ describe('UsersController (e2e)', () => {
 
     await request(app.getHttpServer())
       .post('/users/set-role-claims')
-      .send({ claim: Roles.USER, uid })
+      .send({ claim: AppRole.USER, uid })
       .expect(200);
 
     // refresh local token

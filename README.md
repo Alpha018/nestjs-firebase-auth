@@ -100,8 +100,6 @@ import { FirebaseAdminModule } from '@alpha018/nestjs-firebase-auth';
 
 ### Auth Guard Without Role Validation
 
-> **⚠️ Deprecation Warning:** Direct usage of `UseGuards(FirebaseGuard)` is deprecated. Please use the `@Auth` decorator instead.
-
 To protect an endpoint without validating user roles, use the Auth Guard to ensure the Firebase user's token is valid.
 
 ```ts
@@ -249,9 +247,6 @@ export class AppController {
 - `@FirebaseUser()` → Returns the **full decoded token** (`DecodedIdToken`).
 - `@FirebaseRolesClaims()` → Returns only the **custom role claims** (roles/permissions) defined for the user.
 
-> `@FirebaseUserClaims()` is a deprecated alias of `@FirebaseRolesClaims()`. It still works and
-> returns the same value, but new code should use `@FirebaseRolesClaims()`.
-
 This separation ensures that developers can access both the raw Firebase user object and the role/claims information independently.
 
 ## Migration Guide (v2.0.0)
@@ -268,11 +263,11 @@ unchanged; the breaking changes come from the SDK:
 
 ## Migration Guide (v1.9.x)
 
-To improve semantic clarity and developer experience, direct usage of guards has been deprecated in favor of more descriptive decorators.
+To improve semantic clarity and developer experience, direct usage of guards was deprecated in favor of more descriptive decorators. As of `v3.0.0`, `RolesGuard` and the public `FirebaseGuard` export have been removed entirely — see the [Migrations guide](docs/wiki/guides/Migrations.md#removal-of-deprecated-guards-and-decorators).
 
 ### 1. Replace `RolesGuard` with `@Roles`
 
-**Deprecated:**
+**Removed in v3.0.0:**
 
 ```ts
 @UseGuards(FirebaseGuard) // or alone if global
@@ -291,7 +286,7 @@ To improve semantic clarity and developer experience, direct usage of guards has
 
 ### 2. Replace `UseGuards(FirebaseGuard)` with `@Auth`
 
-**Deprecated:**
+**Removed in v3.0.0:**
 
 ```ts
 @UseGuards(FirebaseGuard)
@@ -309,7 +304,6 @@ To improve semantic clarity and developer experience, direct usage of guards has
 
 - **Better readability**: `@Auth` vs `@UseGuards(FirebaseGuard)` clearly states intent.
 - **Optimized Performance**: The new decorators use an optimized guard that prevents redundant token verification checks when composing controllers and methods.
-- **Future Proofing**: Direct class exports for guards will be removed in the next major version.
 
 ## Documentation
 
