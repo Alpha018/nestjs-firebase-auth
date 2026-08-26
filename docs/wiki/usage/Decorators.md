@@ -65,3 +65,18 @@ getMyRoles(@FirebaseRolesClaims() roles: string[]) {
   return roles;
 }
 ```
+
+## `@Policies(...policies: PolicyReference[])`
+
+Specifies the policies (ABAC) required to access a route. Applies `FirebaseGuard` and `PoliciesGuard`, and every listed policy must resolve for the request to proceed. Works exactly like `@UseGuards()`: each argument is either a `PolicyHandler` class (resolved through Nest's DI container) or an instance built with `new`. See [[Authorization-Policies|Authorization-Policies]] for how to define one.
+
+**Usage:**
+
+```typescript
+@Policies(ResourceOwnerPolicyHandler)
+@Get(':ownerId')
+getResource(@Param('ownerId') ownerId: string) { ... }
+```
+
+> [!NOTE]
+> `@Auth({ policies: [...] })` is an equivalent way to set the same policies; use whichever reads better at the call site, but not both on the same route.

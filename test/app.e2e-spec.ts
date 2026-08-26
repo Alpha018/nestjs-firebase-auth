@@ -6,6 +6,7 @@ import { ExtractJwt } from 'passport-jwt';
 import * as firebase from 'firebase/app';
 import request from 'supertest';
 
+import { SelfOwnedPolicyHandler } from './controller/self-owned.policy';
 import { UsersController, Roles } from './controller/user.controller';
 import { mockClaims } from './__mock__/custom-claims';
 import { FirebaseAdminModule } from '../src';
@@ -37,6 +38,7 @@ describe('UsersController (e2e)', () => {
           inject: [ConfigService],
         }),
       ],
+      providers: [SelfOwnedPolicyHandler],
       controllers: [UsersController],
     }).compile();
 
@@ -196,6 +198,49 @@ describe('UsersController (e2e)', () => {
 
     const responseBody = response.body;
     expect(responseBody).toHaveProperty('statusCode', 403);
+  });
+
+  it('/users/policy/self-owned (GET - Unauthorized - No Token)', async () => {
+    await request(app.getHttpServer()).get('/users/policy/self-owned').expect(401);
+  });
+
+  it('/users/policy/self-owned (GET - Allowed - Own resource)', async () => {
+    const uid = configService.get(keyUserEnv);
+    const idToken = await loginAndGetIdToken(uid);
+
+    await request(app.getHttpServer())
+      .get('/users/policy/self-owned')
+      .query({ uid })
+      .set('Authorization', `Bearer ${idToken}`)
+      .expect(200);
+  });
+
+  it('/users/policy/self-owned (GET - Forbidden - Different resource)', async () => {
+    const uid = configService.get(keyUserEnv);
+    const idToken = await loginAndGetIdToken(uid);
+
+    const response = await request(app.getHttpServer())
+      .get('/users/policy/self-owned')
+      .query({ uid: 'someone-elses-uid' })
+      .set('Authorization', `Bearer ${idToken}`)
+      .expect(403);
+
+    expect(response.body).toMatchObject({
+      message: 'The authenticated user does not own this resource',
+      code: 'FIREBASE_AUTH_POLICY_VIOLATION',
+    });
+  });
+
+  it('/users/policy/unregistered (GET - Forbidden - No handler registered)', async () => {
+    const uid = configService.get(keyUserEnv);
+    const idToken = await loginAndGetIdToken(uid);
+
+    const response = await request(app.getHttpServer())
+      .get('/users/policy/unregistered')
+      .set('Authorization', `Bearer ${idToken}`)
+      .expect(403);
+
+    expect(response.body).toMatchObject({ code: 'FIREBASE_AUTH_POLICY_VIOLATION' });
   });
 
   afterAll(async () => {

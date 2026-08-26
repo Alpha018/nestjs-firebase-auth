@@ -13,6 +13,16 @@ export abstract class FirebaseAuthException extends HttpException {
   }
 }
 
+export class PolicyViolationException extends FirebaseAuthException {
+  constructor(reason?: string) {
+    super(
+      HttpStatus.FORBIDDEN,
+      FirebaseAuthErrorCode.POLICY_VIOLATION,
+      reason ?? 'The authenticated user does not satisfy the required policy',
+    );
+  }
+}
+
 export class InsufficientRoleException extends FirebaseAuthException {
   constructor() {
     super(

@@ -2,7 +2,8 @@ import { Controller, UseGuards, HttpCode, Query, Body, Post, Get } from '@nestjs
 import { getFirestore } from 'firebase-admin/firestore';
 import { DecodedIdToken } from 'firebase-admin/auth';
 
-import { FirebaseRolesClaims, FirebaseProvider, RolesGuard } from '../../src';
+import { FirebaseRolesClaims, FirebaseProvider, RolesGuard, Policies } from '../../src';
+import { UnregisteredPolicyHandler, SelfOwnedPolicyHandler } from './self-owned.policy';
 import { FirebaseGuard } from '../../src';
 import { FirebaseUser } from '../../src';
 
@@ -78,6 +79,18 @@ export class UsersController {
   @Get('get-claims')
   async getClaims(@FirebaseUser() user: unknown) {
     return user;
+  }
+
+  @Policies(SelfOwnedPolicyHandler)
+  @Get('policy/self-owned')
+  getSelfOwnedPolicy(@FirebaseUser() user: DecodedIdToken) {
+    return user;
+  }
+
+  @Policies(UnregisteredPolicyHandler)
+  @Get('policy/unregistered')
+  getUnregisteredPolicy() {
+    return { status: 'ok' };
   }
 
   @UseGuards(FirebaseGuard)

@@ -19,6 +19,9 @@ var EXPECTED_EXPORTS = [
   'TokenExpiredException',
   'TokenRevokedException',
   'InsufficientRoleException',
+  'Policies',
+  'PoliciesGuard',
+  'PolicyViolationException',
 ];
 
 var lib = require(distPath);

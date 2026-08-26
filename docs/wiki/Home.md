@@ -6,8 +6,9 @@
 
 - **Easy Integration**: Seamlessly integrates with NestJS using a dynamic module.
 - **Role-Based Access Control (RBAC)**: Protect routes based on user roles (e.g., ADMIN, USER).
+- **Policy-Based Authorization (ABAC)**: Enforce contextual rules, like resource ownership, with your own policy handlers. See [[Authorization-Policies|Authorization-Policies]].
 - **Custom Claims**: Easily manage and verify custom claims on Firebase users.
-- **Decorators**: Clean and expressive decorators like `@Auth`, `@Roles`, and `@FirebaseUser`.
+- **Decorators**: Clean and expressive decorators like `@Auth`, `@Roles`, `@Policies`, and `@FirebaseUser`.
 - **Flexible Configuration**: Supports both synchronous and asynchronous configuration.
 
 ---
@@ -26,6 +27,7 @@
 - [[Basic Usage|Basic-Usage]]
 - [[Advanced Usage|Advanced-Usage]]
 - [[Decorators|Decorators]]
+- [[Policies (ABAC)|Authorization-Policies]]
 
 ## 📚 Guides
 

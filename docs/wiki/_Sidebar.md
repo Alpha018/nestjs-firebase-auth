@@ -12,6 +12,7 @@
 - [[Basic Usage|Basic-Usage]]
 - [[Advanced Usage|Advanced-Usage]]
 - [[Decorators|Decorators]]
+- [[Policies (ABAC)|Authorization-Policies]]
 
 ## 📚 Guides
 
