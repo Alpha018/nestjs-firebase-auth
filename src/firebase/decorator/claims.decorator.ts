@@ -1,6 +1,17 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import {
+  createParamDecorator,
+  ExecutionContext,
+  applyDecorators,
+  SetMetadata,
+  UseGuards,
+} from '@nestjs/common';
 
-import { FIREBASE_CLAIMS_USER_METADATA } from '../constant/firebase.constant';
+import {
+  FIREBASE_CLAIMS_USER_METADATA,
+  FIREBASE_CLAIMS_DECORATOR,
+} from '../constant/firebase.constant';
+import { FirebaseGuard } from '../guard/firebase.guard';
+import { ClaimsGuard } from '../claims/claims.guard';
 
 /**
  * Extracts Firebase custom claims from the request metadata.
@@ -22,3 +33,14 @@ export const ClaimsFactory = (data: unknown, ctx: ExecutionContext) => {
  * The specific claims returned depend on the `rolesClaimKey` configuration.
  */
 export const FirebaseRolesClaims = createParamDecorator(ClaimsFactory);
+
+/**
+ * Decorator that sets the fine-grained claims required for a route handler, requiring
+ * all of them (unlike `@Roles()`, which is satisfied by any one). It also applies
+ * `FirebaseGuard` and `ClaimsGuard`, so the route is both authenticated and claims-checked.
+ */
+export const RequireClaims = <T>(...claims: T[]) =>
+  applyDecorators(
+    SetMetadata(FIREBASE_CLAIMS_DECORATOR, claims),
+    UseGuards(FirebaseGuard, ClaimsGuard),
+  );

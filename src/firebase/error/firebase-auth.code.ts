@@ -1,5 +1,6 @@
 /** Ordered error codes for authentication and authorization failures raised by `FirebaseGuard`. */
 export enum FirebaseAuthErrorCode {
+  INSUFFICIENT_CLAIMS = 'FIREBASE_AUTH_INSUFFICIENT_CLAIMS',
   INSUFFICIENT_ROLE = 'FIREBASE_AUTH_INSUFFICIENT_ROLE',
   POLICY_VIOLATION = 'FIREBASE_AUTH_POLICY_VIOLATION',
   TOKEN_NOT_FOUND = 'FIREBASE_AUTH_TOKEN_NOT_FOUND',

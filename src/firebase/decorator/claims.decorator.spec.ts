@@ -1,7 +1,10 @@
 import { ExecutionContext } from '@nestjs/common';
 
-import { FIREBASE_CLAIMS_USER_METADATA } from '../constant/firebase.constant';
-import { ClaimsFactory } from './claims.decorator';
+import {
+  FIREBASE_CLAIMS_USER_METADATA,
+  FIREBASE_CLAIMS_DECORATOR,
+} from '../constant/firebase.constant';
+import { ClaimsFactory, RequireClaims } from './claims.decorator';
 
 const mockExecutionContext: ExecutionContext = {
   getArgByIndex: jest.fn(),
@@ -39,5 +42,30 @@ describe('Firebase Claims Decorator - Unit Test', () => {
     const result = ClaimsFactory(null, mockExecutionContext);
 
     expect(result).toEqual(mockClaims.claims);
+  });
+});
+
+describe('RequireClaims', () => {
+  it('should set metadata with the required claims', () => {
+    const claims = ['users:read', 'users:write'];
+    const decorator = RequireClaims(...claims);
+
+    function testFunction() {}
+
+    decorator(testFunction);
+
+    const metadata = Reflect.getMetadata(FIREBASE_CLAIMS_DECORATOR, testFunction);
+    expect(metadata).toEqual(claims);
+  });
+
+  it('should handle no claims', () => {
+    const decorator = RequireClaims();
+
+    function testFunction() {}
+
+    decorator(testFunction);
+
+    const metadata = Reflect.getMetadata(FIREBASE_CLAIMS_DECORATOR, testFunction);
+    expect(metadata).toEqual([]);
   });
 });

@@ -94,3 +94,32 @@ export class AdminController {
   }
 }
 ```
+
+## Fine-Grained Claims
+
+For finer control than roles, use `@RequireClaims()`: the user must hold **every** listed claim, not just one. This is separate from roles, stored under its own custom-claims key (default `'permissions'`).
+
+> [!NOTE]
+> Like `@Roles()`, `@RequireClaims()` requires the route to be protected by `@Auth()` (or `FirebaseGuard`) to function correctly; it applies `FirebaseGuard` and `ClaimsGuard` on its own when used standalone.
+
+```typescript
+import { Controller, Get } from '@nestjs/common';
+import { RequireClaims } from '@alpha018/nestjs-firebase-auth';
+
+enum UsersClaim {
+  READ = 'users:read',
+  WRITE = 'users:write',
+}
+
+@Controller('users')
+export class UsersController {
+
+  @RequireClaims(UsersClaim.READ, UsersClaim.WRITE)
+  @Get(':id')
+  getUser(@Param('id') id: string) {
+    return 'Requires both users:read and users:write';
+  }
+}
+```
+
+See [[Claims (Fine-Grained)|Authorization-Claims]] for the full mechanism, including how it combines with roles and policies.

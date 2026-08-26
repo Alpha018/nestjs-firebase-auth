@@ -1,26 +1,43 @@
-import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
+import { applyDecorators, CanActivate, SetMetadata, UseGuards, Type } from '@nestjs/common';
 
-import { FIREBASE_POLICIES_DECORATOR } from '../constant/firebase.constant';
+import {
+  FIREBASE_APP_ROLES_DECORATOR,
+  FIREBASE_POLICIES_DECORATOR,
+  FIREBASE_CLAIMS_DECORATOR,
+} from '../constant/firebase.constant';
 import { AuthOptions } from '../interface/auth-options.interface';
 import { FirebaseGuard } from '../guard/firebase.guard';
 import { PoliciesGuard } from '../policy/policy.guard';
+import { ClaimsGuard } from '../claims/claims.guard';
 
 /**
- * Decorator that protects the route with Firebase Authentication.
- * It ensures the request has a valid Firebase token.
+ * Decorator that protects the route with Firebase Authentication, composing
+ * roles (RBAC), claims (fine-grained), and policies (ABAC) on the same route.
  *
- * @param options.policies - When set, also applies `PoliciesGuard` and the given
- * policies. Equivalent to combining `@Auth()` with `@Policies(...)`; do not use
- * both decorators on the same route to avoid registering `PoliciesGuard` twice.
- * @returns Decorator composed of `UseGuards(FirebaseGuard)`, and `PoliciesGuard` when `policies` is given.
+ * @param options.roles - Same as `@Roles(...)`: passes if the user has any one of them.
+ * @param options.claims - Same as `@RequireClaims(...)`: requires every listed claim.
+ * @param options.policies - Same as `@Policies(...)`: evaluates each policy handler.
+ *
+ * Don't combine `@Auth({ claims })`/`@Auth({ policies })` with `@RequireClaims`/`@Policies`
+ * on the same route — that registers the corresponding guard twice.
  */
 export const Auth = (options?: AuthOptions) => {
-  if (!options?.policies?.length) {
-    return applyDecorators(UseGuards(FirebaseGuard));
+  const guards: Type<CanActivate>[] = [FirebaseGuard];
+  const metadata: MethodDecorator[] = [];
+
+  if (options?.roles?.length) {
+    metadata.push(SetMetadata(FIREBASE_APP_ROLES_DECORATOR, options.roles));
   }
 
-  return applyDecorators(
-    SetMetadata(FIREBASE_POLICIES_DECORATOR, options.policies),
-    UseGuards(FirebaseGuard, PoliciesGuard),
-  );
+  if (options?.claims?.length) {
+    metadata.push(SetMetadata(FIREBASE_CLAIMS_DECORATOR, options.claims));
+    guards.push(ClaimsGuard);
+  }
+
+  if (options?.policies?.length) {
+    metadata.push(SetMetadata(FIREBASE_POLICIES_DECORATOR, options.policies));
+    guards.push(PoliciesGuard);
+  }
+
+  return applyDecorators(...metadata, UseGuards(...guards));
 };

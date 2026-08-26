@@ -13,6 +13,8 @@
 - [[Advanced Usage|Advanced-Usage]]
 - [[Decorators|Decorators]]
 - [[Policies (ABAC)|Authorization-Policies]]
+- [[Claims (Fine-Grained)|Authorization-Claims]]
+- [[Complex Examples|Complex-Examples]]
 
 ## 📚 Guides
 

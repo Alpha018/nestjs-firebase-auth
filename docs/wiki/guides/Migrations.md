@@ -161,3 +161,13 @@ route() {}
 @Get('r')
 route() {}
 ```
+
+### Deprecated options
+
+`v3.0.0` also deprecates one config option, still supported but scheduled for removal in a future major version:
+
+| Deprecated | Replacement |
+|---|---|
+| `auth.config.useLocalRoles` | `auth.config.useLocalDecode` |
+
+`useLocalRoles` keeps working exactly as before. `useLocalDecode` does the same thing (local vs remote resolution of roles and claims), under a name that isn't tied to "roles" now that it also governs `ClaimsGuard`. If both are set, `useLocalDecode` wins.

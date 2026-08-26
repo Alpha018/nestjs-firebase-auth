@@ -70,7 +70,7 @@ export class FirebaseGuard implements CanActivate {
         context,
         request,
         decodedToken,
-        authConfig?.useLocalRoles ?? false,
+        authConfig?.useLocalDecode ?? authConfig?.useLocalRoles ?? false,
       );
     }
 
@@ -86,7 +86,7 @@ export class FirebaseGuard implements CanActivate {
       context,
       request,
       decodedToken,
-      authConfig?.useLocalRoles ?? false,
+      authConfig?.useLocalDecode ?? authConfig?.useLocalRoles ?? false,
     );
   }
 

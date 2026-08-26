@@ -283,6 +283,8 @@ deleteUser() { ... }
 
 `@Roles()` already applies `FirebaseGuard`, and `@Policies()` adds `PoliciesGuard` on top; there's no conflict or duplicate work between the two.
 
+See [[Complex Examples|Complex-Examples]] for a version that also adds claims to the mix.
+
 ## Handling rejections
 
 A failed policy raises `PolicyViolationException` (`403`), with the same `code`/`message` shape as the rest of the library's auth errors:

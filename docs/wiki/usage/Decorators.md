@@ -2,7 +2,7 @@
 
 ## `@Auth()`
 
-Protects a route or controller using the `FirebaseGuard`. It ensures that the request contains a valid Firebase ID token in the `Authorization: Bearer <token>` header.
+Protects a route or controller using the `FirebaseGuard`. It ensures that the request contains a valid Firebase ID token in the `Authorization: Bearer <token>` header, and can compose roles, claims, and policies on the same route via `@Auth({ roles, claims, policies })`.
 
 **Usage:**
 
@@ -65,6 +65,30 @@ getMyRoles(@FirebaseRolesClaims() roles: string[]) {
   return roles;
 }
 ```
+
+## `@RequireClaims(...claims: T[])`
+
+Specifies the fine-grained claims required to access a route. The user must have **every** one of the specified claims, unlike `@Roles()`, which is satisfied by any one. Applies `FirebaseGuard` and `ClaimsGuard`.
+
+**Requirements:**
+
+- The user must have a custom claim (default key: `'permissions'`, configurable via `claimsClaimKey`) containing an array of claims.
+
+**Usage:**
+
+```typescript
+enum UsersClaim {
+  READ = 'users:read',
+  WRITE = 'users:write',
+}
+
+@RequireClaims(UsersClaim.READ, UsersClaim.WRITE)
+@Get(':id')
+getUser(@Param('id') id: string) { ... }
+```
+
+> [!NOTE]
+> `@Auth({ claims: [...] })` is an equivalent way to set the same claims; use whichever reads better at the call site, but not both on the same route. See [[Claims (Fine-Grained)|Authorization-Claims]] for the full mechanism.
 
 ## `@Policies(...policies: PolicyReference[])`
 

@@ -23,6 +23,16 @@ export class PolicyViolationException extends FirebaseAuthException {
   }
 }
 
+export class InsufficientClaimsException extends FirebaseAuthException {
+  constructor() {
+    super(
+      HttpStatus.FORBIDDEN,
+      FirebaseAuthErrorCode.INSUFFICIENT_CLAIMS,
+      'The authenticated user does not have the required claims',
+    );
+  }
+}
+
 export class InsufficientRoleException extends FirebaseAuthException {
   constructor() {
     super(

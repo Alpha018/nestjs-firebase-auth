@@ -173,6 +173,32 @@ describe('FirebaseGuard', () => {
       ]);
     });
 
+    it('should resolve roles locally when useLocalDecode is true', async () => {
+      request.headers.authorization = bearerToken;
+      firebaseProvider.auth.verifyIdToken.mockResolvedValue({ uid: 'user_id' } as DecodedIdToken);
+      reflector.getAllAndOverride.mockReturnValue(['admin']);
+      firebaseProvider.getClaimsRoleBase.mockResolvedValue(['admin']);
+      (guard as any).config.auth = { config: { useLocalDecode: true, validateRole: true } };
+
+      await guard.canActivate(context);
+
+      expect(firebaseProvider.getClaimsRoleBase).toHaveBeenCalledWith(expect.anything(), true);
+    });
+
+    it('should let useLocalDecode take precedence over useLocalRoles when both are set', async () => {
+      request.headers.authorization = bearerToken;
+      firebaseProvider.auth.verifyIdToken.mockResolvedValue({ uid: 'user_id' } as DecodedIdToken);
+      reflector.getAllAndOverride.mockReturnValue(['admin']);
+      firebaseProvider.getClaimsRoleBase.mockResolvedValue(['admin']);
+      (guard as any).config.auth = {
+        config: { useLocalDecode: false, useLocalRoles: true, validateRole: true },
+      };
+
+      await guard.canActivate(context);
+
+      expect(firebaseProvider.getClaimsRoleBase).toHaveBeenCalledWith(expect.anything(), false);
+    });
+
     it('should use custom extractor if provided', async () => {
       const customExtractor = jest.fn().mockReturnValue('custom_token');
       const guardWithExtractor = new FirebaseGuard(

@@ -16,14 +16,34 @@ export interface FirebaseAuthStrategyOptions {
   extractor?: JwtFromRequestFunction;
 
   /**
+   * Indicates whether to use locally decoded values (roles and claims) from the JWT token,
+   * instead of fetching them from Firebase on every request.
+   *
+   * Supersedes `useLocalRoles`, which is deprecated. If both are set, this one wins.
+   *
+   * @default false
+   */
+  useLocalDecode?: boolean;
+
+  /**
    * Indicates whether to use roles embedded in locally decoded JWT tokens.
    *
    * - If `true`, roles will be read directly from the decoded token payload.
    * - If `false`, roles will be fetched from Firebase custom claims instead.
    *
+   * @deprecated Use `useLocalDecode` instead. Scheduled for removal in a future major version.
    * @default false
    */
   useLocalRoles?: boolean;
+
+  /**
+   * The name of the key within the Firebase custom claims that stores the user's
+   * fine-grained claims. Customize this if `'permissions'` already means something else
+   * in your custom claims object.
+   *
+   * @default 'permissions' (defined by `FIREBASE_APP_CLAIMS_DEFAULT_DECORATOR`)
+   */
+  claimsClaimKey?: string;
 
   /**
    * Indicates whether to check if the provided Firebase ID token has been revoked.

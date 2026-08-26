@@ -2,8 +2,11 @@ import { initializeApp, AppOptions, getApps, getApp, cert, App } from 'firebase-
 import { DecodedIdToken, getAuth } from 'firebase-admin/auth';
 import { Injectable } from '@nestjs/common';
 
+import {
+  FIREBASE_APP_CLAIMS_DEFAULT_DECORATOR,
+  FIREBASE_APP_ROLES_DEFAULT_DECORATOR,
+} from '../constant/firebase.constant';
 import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
-import { FIREBASE_APP_ROLES_DEFAULT_DECORATOR } from '../constant/firebase.constant';
 
 @Injectable()
 /**
@@ -32,6 +35,10 @@ export class FirebaseProvider {
 
   private readonly _app: App;
 
+  private get claimsKey(): string {
+    return this.data.auth?.config?.claimsClaimKey ?? FIREBASE_APP_CLAIMS_DEFAULT_DECORATOR;
+  }
+
   private get rolesKey(): string {
     return this.data.auth?.config?.rolesClaimKey ?? FIREBASE_APP_ROLES_DEFAULT_DECORATOR;
   }
@@ -58,6 +65,22 @@ export class FirebaseProvider {
     }
 
     this._app = initializeApp(appOptions);
+  }
+
+  /**
+   * Retrieves fine-grained claims from a Firebase user, from the decoded token if
+   * `localDecode` is true, or from Firebase custom claims otherwise.
+   */
+  async getClaimsPermissionBase<T>(
+    user: DecodedIdToken,
+    localDecode: boolean,
+  ): Promise<undefined | T[]> {
+    if (localDecode) {
+      return user?.[this.claimsKey];
+    }
+
+    const { customClaims } = await this.auth.getUser(user.uid);
+    return customClaims?.[this.claimsKey];
   }
 
   /**
@@ -93,6 +116,18 @@ export class FirebaseProvider {
     return this.auth.setCustomUserClaims(uid, {
       ...claims,
       [this.rolesKey]: customClaims?.[this.rolesKey],
+    });
+  }
+
+  /**
+   * Sets or overwrites the fine-grained claims for a specific Firebase user, replacing the
+   * claims-specific key while preserving every other custom claim (e.g. roles).
+   */
+  async setClaimsPermissionBase<T>(uid: string, claims: T[]): Promise<void> {
+    const { customClaims } = await this.auth.getUser(uid);
+    return this.auth.setCustomUserClaims(uid, {
+      ...(customClaims || {}),
+      [this.claimsKey]: claims,
     });
   }
 
