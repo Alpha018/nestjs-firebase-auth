@@ -68,6 +68,25 @@ export class FirebaseProvider {
   }
 
   /**
+   * Sets custom claims for a specific Firebase user, preserving the existing role and
+   * fine-grained claims. This method merges the new claims with any existing custom claims,
+   * but ensures that the role-specific (e.g., 'roles') and claims-specific (e.g., 'permissions')
+   * keys are not overwritten by this operation.
+   *
+   * @param uid The UID of the user to update.
+   * @param claims An object containing the custom claims to set.
+   * @returns A promise that resolves once the claims are successfully updated.
+   */
+  async setClaimsBase(uid: string, claims: Record<string, any>): Promise<void> {
+    const { customClaims } = await this.auth.getUser(uid);
+    return this.auth.setCustomUserClaims(uid, {
+      ...claims,
+      [this.claimsKey]: customClaims?.[this.claimsKey],
+      [this.rolesKey]: customClaims?.[this.rolesKey],
+    });
+  }
+
+  /**
    * Retrieves fine-grained claims from a Firebase user, from the decoded token if
    * `localDecode` is true, or from Firebase custom claims otherwise.
    */
@@ -100,23 +119,6 @@ export class FirebaseProvider {
 
     const { customClaims } = await this.auth.getUser(user.uid);
     return customClaims?.[this.rolesKey];
-  }
-
-  /**
-   * Sets custom claims for a specific Firebase user, preserving any existing role claims.
-   * This method merges the new claims with any existing custom claims, but ensures that
-   * the role-specific claim (e.g., 'roles') is not overwritten by this operation.
-   *
-   * @param uid The UID of the user to update.
-   * @param claims An object containing the custom claims to set.
-   * @returns A promise that resolves once the claims are successfully updated.
-   */
-  async setClaimsBase(uid: string, claims: Record<string, any>): Promise<void> {
-    const { customClaims } = await this.auth.getUser(uid);
-    return this.auth.setCustomUserClaims(uid, {
-      ...claims,
-      [this.rolesKey]: customClaims?.[this.rolesKey],
-    });
   }
 
   /**

@@ -2,7 +2,10 @@ import { TestingModule, Test } from '@nestjs/testing';
 import { ModuleRef, Reflector } from '@nestjs/core';
 import { ExecutionContext } from '@nestjs/common';
 
-import { FIREBASE_TOKEN_USER_METADATA } from '../constant/firebase.constant';
+import {
+  FIREBASE_CLAIMS_USER_METADATA,
+  FIREBASE_TOKEN_USER_METADATA,
+} from '../constant/firebase.constant';
 import { PolicyViolationException } from '../error/firebase-auth.exception';
 import { PolicyHandler } from '../interface/policy-handler.interface';
 import { PoliciesGuard } from './policy.guard';
@@ -66,6 +69,15 @@ describe('PoliciesGuard', () => {
       expect.objectContaining({ user: { uid: 'user-1' }, request }),
     );
     expect(moduleRef.get).not.toHaveBeenCalled();
+  });
+
+  it('should pass the claims attached by FirebaseGuard through to the policy handler', async () => {
+    request.metadata[FIREBASE_CLAIMS_USER_METADATA] = { claims: ['editor'] };
+    const handler: PolicyHandler = { handle: jest.fn().mockResolvedValue(undefined) };
+    reflector.getAllAndOverride.mockReturnValue([handler]);
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(handler.handle).toHaveBeenCalledWith(expect.objectContaining({ claims: ['editor'] }));
   });
 
   it('should resolve a bare class reference through the DI container', async () => {

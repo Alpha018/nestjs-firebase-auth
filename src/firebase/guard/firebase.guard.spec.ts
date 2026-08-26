@@ -126,6 +126,37 @@ describe('FirebaseGuard', () => {
       expect(result).toBe(true);
     });
 
+    it('should attach claims even when the route has no @Roles(), as long as validateRole is on', async () => {
+      request.headers.authorization = bearerToken;
+      firebaseProvider.auth.verifyIdToken.mockResolvedValue({ uid: 'user_id' } as DecodedIdToken);
+      (guard as any).config.auth = { config: { validateRole: true } };
+      reflector.getAllAndOverride.mockReturnValue(undefined);
+      firebaseProvider.getClaimsRoleBase.mockResolvedValue(['user']);
+
+      const result = await guard.canActivate(context);
+
+      expect(result).toBe(true);
+      expect(firebaseProvider.getClaimsRoleBase).toHaveBeenCalledWith(
+        expect.objectContaining({ uid: 'user_id' }),
+        false,
+      );
+      expect(request.metadata.FIREBASE_CLAIMS_METADATA.claims).toEqual(['user']);
+    });
+
+    it('should not fetch or attach claims when validateRole is off, even on the re-entry path', async () => {
+      request.headers.authorization = bearerToken;
+      request.metadata = {
+        [FIREBASE_TOKEN_USER_METADATA]: { user: { uid: 'user_id' } },
+      };
+      (guard as any).config.auth = { config: { validateRole: false } };
+      reflector.getAllAndOverride.mockReturnValue(undefined);
+
+      const result = await guard.canActivate(context);
+
+      expect(result).toBe(true);
+      expect(firebaseProvider.getClaimsRoleBase).not.toHaveBeenCalled();
+    });
+
     it('should return true if user has required role', async () => {
       request.headers.authorization = bearerToken;
       firebaseProvider.auth.verifyIdToken.mockResolvedValue({ uid: 'user_id' } as DecodedIdToken);

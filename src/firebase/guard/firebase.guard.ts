@@ -71,6 +71,7 @@ export class FirebaseGuard implements CanActivate {
         request,
         decodedToken,
         authConfig?.useLocalDecode ?? authConfig?.useLocalRoles ?? false,
+        authConfig?.validateRole ?? false,
       );
     }
 
@@ -87,18 +88,21 @@ export class FirebaseGuard implements CanActivate {
       request,
       decodedToken,
       authConfig?.useLocalDecode ?? authConfig?.useLocalRoles ?? false,
+      authConfig?.validateRole ?? false,
     );
   }
 
   /**
-   * Handles role-based validation for the request.
-   * It retrieves the roles required by the route handler, fetches the user's roles,
-   * and checks if the user has at least one of the required roles.
+   * Handles role-based validation for the request. Fetches and attaches the user's roles
+   * whenever role validation is enabled (even if this specific route has no `@Roles()`
+   * requirement), so `PoliciesGuard` can read them from `request.metadata`. It then checks
+   * the roles required by the route handler, if any.
    *
    * @param context The execution context, used to access route metadata.
    * @param request The incoming HTTP request object.
    * @param decodedToken The user's decoded Firebase ID token.
    * @param useLocalRoles A flag indicating whether to use roles from the token payload or fetch from Firebase.
+   * @param validateRole Whether role validation is enabled globally (`auth.config.validateRole`).
    * @returns A promise that resolves to `true` if the user is authorized, otherwise `false`.
    */
   private async handleRoleValidation(
@@ -106,18 +110,23 @@ export class FirebaseGuard implements CanActivate {
     request: any,
     decodedToken: DecodedIdToken,
     useLocalRoles: boolean,
+    validateRole: boolean,
   ): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride(FIREBASE_APP_ROLES_DECORATOR, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (!requiredRoles) {
+    if (!validateRole && !requiredRoles) {
       return true;
     }
 
     const userRoles = await this.firebaseProvider.getClaimsRoleBase(decodedToken, useLocalRoles);
     this.attachClaimsToRequest(request, userRoles);
+
+    if (!requiredRoles) {
+      return true;
+    }
 
     const requiredRolesSet = new Set(requiredRoles);
     const hasRequiredRole = userRoles?.some((role) => requiredRolesSet.has(role)) ?? false;

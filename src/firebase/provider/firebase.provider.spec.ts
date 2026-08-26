@@ -111,10 +111,10 @@ describe('FirebaseProvider', () => {
   });
 
   describe('setClaimsBase', () => {
-    it('should set custom claims while preserving role claims and other existing claims', async () => {
+    it('should set custom claims while preserving role and fine-grained claims', async () => {
       const uid = 'test-uid';
       const newClaims = { premium: true, other: 'new' };
-      const existingClaims = { test: ['user'], other: 'old' };
+      const existingClaims = { permissions: ['users:read'], test: ['user'], other: 'old' };
       mockAuth.getUser.mockResolvedValue({ customClaims: existingClaims });
 
       await provider.setClaimsBase(uid, newClaims);
@@ -123,6 +123,7 @@ describe('FirebaseProvider', () => {
       expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith(uid, {
         ...existingClaims,
         ...newClaims,
+        permissions: existingClaims.permissions, // fine-grained claims are preserved
         test: existingClaims.test, // roles are preserved
       });
     });
