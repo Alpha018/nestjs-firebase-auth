@@ -6,7 +6,8 @@ import { ExtractJwt } from 'passport-jwt';
 import * as firebase from 'firebase/app';
 import request from 'supertest';
 
-import { UsersController, Roles } from './controller/user.controller';
+import { SelfOwnedPolicyHandler } from './controller/self-owned.policy';
+import { UsersController, AppRole } from './controller/user.controller';
 import { mockClaims } from './__mock__/custom-claims';
 import { FirebaseAdminModule } from '../src';
 
@@ -37,6 +38,7 @@ describe('UsersController (e2e)', () => {
           inject: [ConfigService],
         }),
       ],
+      providers: [SelfOwnedPolicyHandler],
       controllers: [UsersController],
     }).compile();
 
@@ -92,15 +94,15 @@ describe('UsersController (e2e)', () => {
     expect(response.body).toEqual({ foo: 'bar' });
   });
 
-  it('/users/me (GET - Forbidden)', async () => {
-    await request(app.getHttpServer()).get('/users/me').expect(403);
+  it('/users/me (GET - Unauthorized - No Token)', async () => {
+    await request(app.getHttpServer()).get('/users/me').expect(401);
   });
 
-  it('/users/me (GET - Unauthorized)', async () => {
+  it('/users/me (GET - Unauthorized - Invalid Token)', async () => {
     await request(app.getHttpServer())
       .get('/users/me')
       .set('Authorization', 'Bearer invalid-token')
-      .expect(403);
+      .expect(401);
   });
 
   it('/users/login (POST - Ok)', async () => {
@@ -137,7 +139,7 @@ describe('UsersController (e2e)', () => {
     const uid = configService.get(keyUserEnv);
     const response = await request(app.getHttpServer())
       .post('/users/set-role-claims')
-      .send({ claim: Roles.ADMIN, uid })
+      .send({ claim: AppRole.ADMIN, uid })
       .expect(200);
 
     const responseBody = response.body;
@@ -165,7 +167,7 @@ describe('UsersController (e2e)', () => {
       .expect(200);
 
     const responseBody = response.body;
-    expect(responseBody).toHaveProperty([Roles.ADMIN]);
+    expect(responseBody).toHaveProperty([AppRole.ADMIN]);
   });
 
   it('/users/get-claims (GET - Get claims)', async () => {
@@ -180,13 +182,13 @@ describe('UsersController (e2e)', () => {
     expect(response.body).toEqual(expect.objectContaining(mockClaims));
   });
 
-  it('/users/get-role-claims (GET - Get claims - 401)', async () => {
+  it('/users/get-role-claims (GET - Get claims - 403)', async () => {
     const uid = configService.get(keyUserEnv);
     const idToken = await loginAndGetIdToken(uid);
 
     await request(app.getHttpServer())
       .post('/users/set-role-claims')
-      .send({ claim: Roles.USER, uid })
+      .send({ claim: AppRole.USER, uid })
       .expect(200);
 
     const response = await request(app.getHttpServer())
@@ -196,6 +198,49 @@ describe('UsersController (e2e)', () => {
 
     const responseBody = response.body;
     expect(responseBody).toHaveProperty('statusCode', 403);
+  });
+
+  it('/users/policy/self-owned (GET - Unauthorized - No Token)', async () => {
+    await request(app.getHttpServer()).get('/users/policy/self-owned').expect(401);
+  });
+
+  it('/users/policy/self-owned (GET - Allowed - Own resource)', async () => {
+    const uid = configService.get(keyUserEnv);
+    const idToken = await loginAndGetIdToken(uid);
+
+    await request(app.getHttpServer())
+      .get('/users/policy/self-owned')
+      .query({ uid })
+      .set('Authorization', `Bearer ${idToken}`)
+      .expect(200);
+  });
+
+  it('/users/policy/self-owned (GET - Forbidden - Different resource)', async () => {
+    const uid = configService.get(keyUserEnv);
+    const idToken = await loginAndGetIdToken(uid);
+
+    const response = await request(app.getHttpServer())
+      .get('/users/policy/self-owned')
+      .query({ uid: 'someone-elses-uid' })
+      .set('Authorization', `Bearer ${idToken}`)
+      .expect(403);
+
+    expect(response.body).toMatchObject({
+      message: 'The authenticated user does not own this resource',
+      code: 'FIREBASE_AUTH_POLICY_VIOLATION',
+    });
+  });
+
+  it('/users/policy/unregistered (GET - Forbidden - No handler registered)', async () => {
+    const uid = configService.get(keyUserEnv);
+    const idToken = await loginAndGetIdToken(uid);
+
+    const response = await request(app.getHttpServer())
+      .get('/users/policy/unregistered')
+      .set('Authorization', `Bearer ${idToken}`)
+      .expect(403);
+
+    expect(response.body).toMatchObject({ code: 'FIREBASE_AUTH_POLICY_VIOLATION' });
   });
 
   afterAll(async () => {

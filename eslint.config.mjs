@@ -43,4 +43,13 @@ export default [
       globals: globals.browser,
     },
   },
+  {
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+    languageOptions: {
+      globals: globals.node,
+    },
+    files: ['scripts/**/*.js'],
+  },
 ];

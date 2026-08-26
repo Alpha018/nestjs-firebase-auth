@@ -103,6 +103,71 @@ Tests that reach Firebase for real — rather than mocking it — additionally r
 
 Mocking `firebase-admin/auth` in your unit tests avoids all of the above.
 
-## Future Breaking Changes
+## Upgrading from v2.x to v3.0.0
 
-In a future major version, the `FirebaseGuard` class export may be removed or made internal. It is still exported in `v2.0.0`. Please migrate to the `@Auth()` and `@Roles()` decorators.
+`FirebaseGuard` used to collapse every authentication and authorization failure into a boolean, which Nest always turned into a **403 Forbidden**. That conflated "you didn't send valid credentials" (401) with "you're authenticated but not allowed" (403), and silently swallowed the underlying Firebase Admin SDK error.
+
+`v3.0.0` replaces the boolean result with typed exceptions:
+
+| Failure | Before | After |
+|---|---|---|
+| No token in the request | `403` | `401` (`TokenNotFoundException`) |
+| Invalid / malformed token | `403` | `401` (`TokenInvalidException`) |
+| Expired token | `403` | `401` (`TokenExpiredException`) |
+| Revoked token (`checkRevoked: true`) | `403` | `401` (`TokenRevokedException`) |
+| Missing required role | `403` | `403` (`InsufficientRoleException`, unchanged status) |
+
+Every exception extends `FirebaseAuthException` and responds with a stable `code` field (see `FirebaseAuthErrorCode`) alongside the message, so you can branch on the failure reason instead of parsing text:
+
+```typescript
+{ "statusCode": 401, "code": "FIREBASE_AUTH_TOKEN_EXPIRED", "message": "The authentication token has expired" }
+```
+
+### Action required
+
+If your application or its tests assert a `403` for requests with a missing or invalid token, update those assertions to `401`. Requests that are authenticated but lack the required role keep returning `403`, unchanged.
+
+```typescript
+// Before
+await request(app).get('/protected').expect(403);
+
+// After (v3.0.0+) — no/invalid token now reports 401
+await request(app).get('/protected').expect(401);
+```
+
+If you need to react to a specific failure, catch the typed exception (or check `error.code` against `FirebaseAuthErrorCode`) instead of relying on the status code alone.
+
+### Removal of deprecated guards and decorators
+
+`v3.0.0` also removes the APIs that were marked `@deprecated` in earlier versions:
+
+| Removed | Replacement |
+|---|---|
+| `RolesGuard(...)` | `@Roles(...)` |
+| `FirebaseUserClaims()` | `@FirebaseRolesClaims()` |
+| `FirebaseGuard` (public export) | `@Auth()` or `@Roles(...)` |
+
+`FirebaseGuard` still exists internally — it's what `@Auth()` and `@Roles()` apply under the hood — but it's no longer exported from the package, so `import { FirebaseGuard } from '@alpha018/nestjs-firebase-auth'` stops compiling. Replace any direct `@UseGuards(FirebaseGuard)` usage with `@Auth()`, and `@UseGuards(FirebaseGuard) @RolesGuard(...)` with `@Roles(...)`.
+
+```typescript
+// Before
+@UseGuards(FirebaseGuard)
+@RolesGuard(Roles.ADMIN)
+@Get('r')
+route() {}
+
+// After (v3.0.0+)
+@Roles(Roles.ADMIN)
+@Get('r')
+route() {}
+```
+
+### Deprecated options
+
+`v3.0.0` also deprecates one config option, still supported but scheduled for removal in a future major version:
+
+| Deprecated | Replacement |
+|---|---|
+| `auth.config.useLocalRoles` | `auth.config.useLocalDecode` |
+
+`useLocalRoles` keeps working exactly as before. `useLocalDecode` does the same thing (local vs remote resolution of roles and claims), under a name that isn't tied to "roles" now that it also governs `ClaimsGuard`. If both are set, `useLocalDecode` wins.

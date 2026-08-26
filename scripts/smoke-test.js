@@ -8,11 +8,22 @@ var distPath = path.join(__dirname, '..', 'dist', 'index.js');
 var EXPECTED_EXPORTS = [
   'FirebaseAdminModule',
   'FirebaseProvider',
-  'FirebaseGuard',
   'FirebaseUser',
   'FirebaseRolesClaims',
   'Auth',
   'Roles',
+  'RequireClaims',
+  'FirebaseAuthErrorCode',
+  'TokenNotFoundException',
+  'TokenInvalidException',
+  'TokenExpiredException',
+  'TokenRevokedException',
+  'InsufficientRoleException',
+  'InsufficientClaimsException',
+  'Policies',
+  'PoliciesGuard',
+  'PolicyViolationException',
+  'ClaimsGuard',
 ];
 
 var lib = require(distPath);

@@ -2,7 +2,7 @@
 
 ## `@Auth()`
 
-Protects a route or controller using the `FirebaseGuard`. It ensures that the request contains a valid Firebase ID token in the `Authorization: Bearer <token>` header.
+Protects a route or controller using the `FirebaseGuard`. It ensures that the request contains a valid Firebase ID token in the `Authorization: Bearer <token>` header, and can compose roles, claims, and policies on the same route via `@Auth({ roles, claims, policies })`.
 
 **Usage:**
 
@@ -65,3 +65,42 @@ getMyRoles(@FirebaseRolesClaims() roles: string[]) {
   return roles;
 }
 ```
+
+## `@RequireClaims(...claims: T[])`
+
+Specifies the fine-grained claims required to access a route. The user must have **every** one of the specified claims, unlike `@Roles()`, which is satisfied by any one. Applies `FirebaseGuard` and `ClaimsGuard`.
+
+**Requirements:**
+
+- The user must have a custom claim (default key: `'permissions'`, configurable via `claimsClaimKey`) containing an array of claims.
+
+**Usage:**
+
+```typescript
+enum UsersClaim {
+  READ = 'users:read',
+  WRITE = 'users:write',
+}
+
+@RequireClaims(UsersClaim.READ, UsersClaim.WRITE)
+@Get(':id')
+getUser(@Param('id') id: string) { ... }
+```
+
+> [!NOTE]
+> `@Auth({ claims: [...] })` is an equivalent way to set the same claims; use whichever reads better at the call site, but not both on the same route. See [[Claims (Fine-Grained)|Authorization-Claims]] for the full mechanism.
+
+## `@Policies(...policies: PolicyReference[])`
+
+Specifies the policies (ABAC) required to access a route. Applies `FirebaseGuard` and `PoliciesGuard`, and every listed policy must resolve for the request to proceed. Works exactly like `@UseGuards()`: each argument is either a `PolicyHandler` class (resolved through Nest's DI container) or an instance built with `new`. See [[Authorization-Policies|Authorization-Policies]] for how to define one.
+
+**Usage:**
+
+```typescript
+@Policies(ResourceOwnerPolicyHandler)
+@Get(':ownerId')
+getResource(@Param('ownerId') ownerId: string) { ... }
+```
+
+> [!NOTE]
+> `@Auth({ policies: [...] })` is an equivalent way to set the same policies; use whichever reads better at the call site, but not both on the same route.

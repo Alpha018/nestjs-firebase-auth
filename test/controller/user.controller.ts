@@ -1,12 +1,12 @@
-import { Controller, UseGuards, HttpCode, Query, Body, Post, Get } from '@nestjs/common';
+import { Controller, HttpCode, Query, Body, Post, Get } from '@nestjs/common';
 import { getFirestore } from 'firebase-admin/firestore';
 import { DecodedIdToken } from 'firebase-admin/auth';
 
-import { FirebaseRolesClaims, FirebaseProvider, RolesGuard } from '../../src';
-import { FirebaseGuard } from '../../src';
-import { FirebaseUser } from '../../src';
+import { UnregisteredPolicyHandler, SelfOwnedPolicyHandler } from './self-owned.policy';
+import { FirebaseRolesClaims, FirebaseProvider, Policies, Roles } from '../../src';
+import { FirebaseUser, Auth } from '../../src';
 
-export enum Roles {
+export enum AppRole {
   ADMIN,
   USER,
 }
@@ -46,8 +46,8 @@ export class UsersController {
 
   @Post('set-role-claims')
   @HttpCode(200)
-  async setRoleClaims(@Body() body: { claim: Roles; uid: string; }) {
-    await this.firebaseProvider.setClaimsRoleBase<Roles>(body.uid, [body.claim]);
+  async setRoleClaims(@Body() body: { claim: AppRole; uid: string; }) {
+    await this.firebaseProvider.setClaimsRoleBase<AppRole>(body.uid, [body.claim]);
     return { status: 'ok' };
   }
 
@@ -58,13 +58,6 @@ export class UsersController {
     return { status: 'ok' };
   }
 
-  @UseGuards(FirebaseGuard)
-  @RolesGuard(Roles.ADMIN)
-  @Get('get-role-claims')
-  async getRoleClaims(@FirebaseRolesClaims() claims: Roles[]) {
-    return claims;
-  }
-
   @Get('app-info')
   getAppInfo() {
     return {
@@ -73,15 +66,32 @@ export class UsersController {
     };
   }
 
-  @UseGuards(FirebaseGuard)
-  @RolesGuard(Roles.ADMIN)
+  @Policies(SelfOwnedPolicyHandler)
+  @Get('policy/self-owned')
+  getSelfOwnedPolicy(@FirebaseUser() user: DecodedIdToken) {
+    return user;
+  }
+
+  @Get('get-role-claims')
+  @Roles(AppRole.ADMIN)
+  async getRoleClaims(@FirebaseRolesClaims() claims: AppRole[]) {
+    return claims;
+  }
+
+  @Policies(UnregisteredPolicyHandler)
+  @Get('policy/unregistered')
+  getUnregisteredPolicy() {
+    return { status: 'ok' };
+  }
+
+  @Roles(AppRole.ADMIN)
   @Get('get-claims')
   async getClaims(@FirebaseUser() user: unknown) {
     return user;
   }
 
-  @UseGuards(FirebaseGuard)
   @Get('me')
+  @Auth()
   getMe(@FirebaseUser() user: DecodedIdToken) {
     return user;
   }

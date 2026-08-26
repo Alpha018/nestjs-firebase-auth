@@ -9,7 +9,12 @@ import {
   FIREBASE_TOKEN_USER_METADATA,
   FIREBASE_ADMIN_CONFIG,
 } from '../constant/firebase.constant';
+import {
+  InsufficientRoleException,
+  TokenNotFoundException,
+} from '../error/firebase-auth.exception';
 import { FirebaseConstructorInterface } from '../interface/firebase-constructor.interface';
+import { mapFirebaseAuthError } from '../error/firebase-auth.handler';
 import { FirebaseProvider } from '../provider/firebase.provider';
 
 @Injectable()
@@ -17,12 +22,8 @@ import { FirebaseProvider } from '../provider/firebase.provider';
  * Class FirebaseGuard
  * @description A NestJS Guard that validates Firebase authentication tokens and checks role-based access.
  *
- * @deprecated Use `@Auth` or `@Roles` decorators instead of using this guard directly.
- * The `FirebaseGuard` class export will be removed in the next major version.
- *
- * Example replacement:
- * - `@UseGuards(FirebaseGuard)` -> `@Auth()`
- * - `@UseGuards(FirebaseGuard)` + `@Roles(...)` -> `@Roles(...)`
+ * Internal implementation detail, no longer part of the public API — use `@Auth` or `@Roles`
+ * instead of applying it directly with `@UseGuards`.
  */
 export class FirebaseGuard implements CanActivate {
   /**
@@ -41,22 +42,24 @@ export class FirebaseGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {
     this.extractor =
-      this.config.auth?.config?.extractor ?? ExtractJwt.fromAuthHeaderAsBearerToken();
+      this.config?.auth?.config?.extractor ?? ExtractJwt.fromAuthHeaderAsBearerToken();
   }
 
   /**
    * Validates incoming requests based on Firebase authentication and optional role requirements.
    * @param context Execution context of the current request.
-   * @returns A promise that resolves to `true` if the request is authorized, otherwise `false`.
+   * @returns A promise that resolves to `true` if the request is authorized.
+   * @throws {FirebaseAuthException} If the token is missing/invalid/expired/revoked (401),
+   * or the user lacks a required role (403).
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const authConfig = this.config.auth?.config;
+    const authConfig = this.config?.auth?.config;
 
     const token = this.extractTokenFromRequest(request);
 
     if (!token) {
-      return false;
+      throw new TokenNotFoundException();
     }
 
     // Optimization: Check if the user is already attached to request to avoid redundant verification
@@ -67,14 +70,12 @@ export class FirebaseGuard implements CanActivate {
         context,
         request,
         decodedToken,
-        authConfig?.useLocalRoles ?? false,
+        authConfig?.useLocalDecode ?? authConfig?.useLocalRoles ?? false,
+        authConfig?.validateRole ?? false,
       );
     }
 
     const decodedToken = await this.verifyToken(token, authConfig?.checkRevoked ?? false);
-    if (!decodedToken) {
-      return false;
-    }
 
     this.attachUserToRequest(request, decodedToken);
 
@@ -86,19 +87,22 @@ export class FirebaseGuard implements CanActivate {
       context,
       request,
       decodedToken,
-      authConfig?.useLocalRoles ?? false,
+      authConfig?.useLocalDecode ?? authConfig?.useLocalRoles ?? false,
+      authConfig?.validateRole ?? false,
     );
   }
 
   /**
-   * Handles role-based validation for the request.
-   * It retrieves the roles required by the route handler, fetches the user's roles,
-   * and checks if the user has at least one of the required roles.
+   * Handles role-based validation for the request. Fetches and attaches the user's roles
+   * whenever role validation is enabled (even if this specific route has no `@Roles()`
+   * requirement), so `PoliciesGuard` can read them from `request.metadata`. It then checks
+   * the roles required by the route handler, if any.
    *
    * @param context The execution context, used to access route metadata.
    * @param request The incoming HTTP request object.
    * @param decodedToken The user's decoded Firebase ID token.
    * @param useLocalRoles A flag indicating whether to use roles from the token payload or fetch from Firebase.
+   * @param validateRole Whether role validation is enabled globally (`auth.config.validateRole`).
    * @returns A promise that resolves to `true` if the user is authorized, otherwise `false`.
    */
   private async handleRoleValidation(
@@ -106,35 +110,46 @@ export class FirebaseGuard implements CanActivate {
     request: any,
     decodedToken: DecodedIdToken,
     useLocalRoles: boolean,
+    validateRole: boolean,
   ): Promise<boolean> {
-    const requiredRoles = this.reflector.get(FIREBASE_APP_ROLES_DECORATOR, context.getHandler());
+    const requiredRoles = this.reflector.getAllAndOverride(FIREBASE_APP_ROLES_DECORATOR, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
-    if (!requiredRoles) {
+    if (!validateRole && !requiredRoles?.length) {
       return true;
     }
 
     const userRoles = await this.firebaseProvider.getClaimsRoleBase(decodedToken, useLocalRoles);
     this.attachClaimsToRequest(request, userRoles);
 
-    if (!userRoles) {
-      return false;
+    if (!requiredRoles?.length) {
+      return true;
     }
 
     const requiredRolesSet = new Set(requiredRoles);
-    return userRoles.some((role) => requiredRolesSet.has(role));
+    const hasRequiredRole = userRoles?.some((role) => requiredRolesSet.has(role)) ?? false;
+
+    if (!hasRequiredRole) {
+      throw new InsufficientRoleException();
+    }
+
+    return true;
   }
 
   /**
    * Verifies the Firebase ID token.
    * @param token The ID token to verify.
    * @param checkRevoked Whether to check if the token has been revoked.
-   * @returns The decoded token if valid, otherwise `null`.
+   * @returns The decoded token.
+   * @throws {FirebaseAuthException} If the token is missing, invalid, expired, or revoked.
    */
-  private async verifyToken(token: string, checkRevoked: boolean): Promise<DecodedIdToken | null> {
+  private async verifyToken(token: string, checkRevoked: boolean): Promise<DecodedIdToken> {
     try {
       return await this.firebaseProvider.auth.verifyIdToken(token, checkRevoked);
-    } catch {
-      return null;
+    } catch (error) {
+      throw mapFirebaseAuthError(error);
     }
   }
 

@@ -74,27 +74,54 @@ export class FirebaseAdminModule {
 
   static forRoot(config: FirebaseConstructorInterface): DynamicModule {
     const firebaseProvider = new FirebaseProvider(config);
+    const reflector = new Reflector();
+    const firebaseGuard = new FirebaseGuard(firebaseProvider, config, reflector);
 
+    const reflectorProvider: ValueProvider<Reflector> = {
+      useValue: reflector,
+      provide: Reflector,
+    };
+
+    const firebaseConfigProvider: ValueProvider<FirebaseConstructorInterface> = {
+      provide: FIREBASE_ADMIN_CONFIG,
+      useValue: config,
+    };
+
+    const firebaseProviderProvider: ValueProvider<FirebaseProvider> = {
+      useValue: firebaseProvider,
+      provide: FirebaseProvider,
+    };
+
+    const firebaseGuardProvider: ValueProvider<FirebaseGuard> = {
+      useValue: firebaseGuard,
+      provide: FirebaseGuard,
+    };
+
+    // Legacy tokens kept for backward compatibility with consumers injecting them directly.
     const firebaseAdminModuleOptions: ValueProvider<FirebaseProvider> = {
       provide: FIREBASE_ADMIN_INJECT,
       useValue: firebaseProvider,
     };
 
-    const reflectorProvider: ValueProvider<Reflector> = {
-      useValue: new Reflector(),
-      provide: Reflector,
+    const firebaseAuthPassportOptions: ValueProvider<FirebaseGuard> = {
+      provide: FIREBASE_ADMIN_AUTH_STRATEGY,
+      useValue: firebaseGuard,
     };
 
-    const firebaseAuthPassportOptions: ValueProvider<FirebaseGuard> = {
-      useValue: new FirebaseGuard(firebaseProvider, config, new Reflector()),
-      provide: FIREBASE_ADMIN_AUTH_STRATEGY,
-    };
+    const providers = [
+      reflectorProvider,
+      firebaseConfigProvider,
+      firebaseProviderProvider,
+      firebaseGuardProvider,
+      firebaseAdminModuleOptions,
+      firebaseAuthPassportOptions,
+    ];
 
     return {
-      providers: [reflectorProvider, firebaseAdminModuleOptions, firebaseAuthPassportOptions],
-      exports: [reflectorProvider, firebaseAdminModuleOptions, firebaseAuthPassportOptions],
       module: FirebaseAdminModule,
+      exports: providers,
       imports: [],
+      providers,
     };
   }
 

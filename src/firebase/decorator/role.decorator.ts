@@ -12,8 +12,3 @@ import { FirebaseGuard } from '../guard/firebase.guard';
  */
 export const Roles = <T>(...roles: T[]) =>
   applyDecorators(SetMetadata(FIREBASE_APP_ROLES_DECORATOR, roles), UseGuards(FirebaseGuard));
-
-/**
- * @deprecated Use `@Roles` instead. This decorator will be removed in future versions.
- */
-export const RolesGuard = <T>(...roles: T[]) => Roles(...roles);
