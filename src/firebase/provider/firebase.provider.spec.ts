@@ -190,5 +190,123 @@ describe('FirebaseProvider', () => {
       const remoteResult = await provider.getClaimsRoleBase(user, false);
       expect(remoteResult).toBeUndefined();
     });
+
+    it('should return undefined instead of crashing when user is undefined and localDecode is false', async () => {
+      const result = await provider.getClaimsRoleBase(undefined as any, false);
+      expect(result).toBeUndefined();
+      expect(mockAuth.getUser).not.toHaveBeenCalled();
+    });
+
+    it('should return undefined instead of crashing when user is null and localDecode is false', async () => {
+      const result = await provider.getClaimsRoleBase(null as any, false);
+      expect(result).toBeUndefined();
+      expect(mockAuth.getUser).not.toHaveBeenCalled();
+    });
+
+    it('should return undefined without touching Firebase when user is undefined and localDecode is true', async () => {
+      const result = await provider.getClaimsRoleBase(undefined as any, true);
+      expect(result).toBeUndefined();
+      expect(mockAuth.getUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getClaimsPermissionBase', () => {
+    it('should get claims from local token when localDecode is true', async () => {
+      const claims = ['users:read'];
+      const userWithClaims = {
+        ...userDecode,
+        permissions: claims,
+      } as any as DecodedIdToken;
+
+      const result = await provider.getClaimsPermissionBase(userWithClaims, true);
+      expect(result).toEqual(claims);
+      expect(mockAuth.getUser).not.toHaveBeenCalled();
+    });
+
+    it('should get claims from Firebase when localDecode is false', async () => {
+      const user = userDecode as any as DecodedIdToken;
+      const claims = ['users:read'];
+      mockAuth.getUser.mockResolvedValue({ customClaims: { permissions: claims } });
+
+      const result = await provider.getClaimsPermissionBase(user, false);
+      expect(mockAuth.getUser).toHaveBeenCalledWith(user.uid);
+      expect(result).toEqual(claims);
+    });
+
+    it('should return undefined instead of crashing when user is undefined and localDecode is false', async () => {
+      const result = await provider.getClaimsPermissionBase(undefined as any, false);
+      expect(result).toBeUndefined();
+      expect(mockAuth.getUser).not.toHaveBeenCalled();
+    });
+
+    it('should return undefined instead of crashing when user is null and localDecode is false', async () => {
+      const result = await provider.getClaimsPermissionBase(null as any, false);
+      expect(result).toBeUndefined();
+      expect(mockAuth.getUser).not.toHaveBeenCalled();
+    });
+
+    it('should return undefined without touching Firebase when user is null and localDecode is true', async () => {
+      const result = await provider.getClaimsPermissionBase(null as any, true);
+      expect(result).toBeUndefined();
+      expect(mockAuth.getUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setClaimsBase', () => {
+    it('should treat a null customClaims value as no existing claims', async () => {
+      const uid = 'test-uid';
+      const newClaims = { premium: true };
+      mockAuth.getUser.mockResolvedValue({ customClaims: null });
+
+      await provider.setClaimsBase(uid, newClaims);
+
+      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith(uid, {
+        ...newClaims,
+        permissions: undefined,
+        test: undefined,
+      });
+    });
+
+    it('should treat a missing customClaims key as no existing claims', async () => {
+      const uid = 'test-uid';
+      const newClaims = { premium: true };
+      mockAuth.getUser.mockResolvedValue({});
+
+      await provider.setClaimsBase(uid, newClaims);
+
+      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith(uid, {
+        ...newClaims,
+        permissions: undefined,
+        test: undefined,
+      });
+    });
+  });
+
+  describe('setClaimsPermissionBase', () => {
+    it('should treat a null customClaims value as no existing claims', async () => {
+      const uid = 'test-uid';
+      const newClaims = ['users:read'];
+      mockAuth.getUser.mockResolvedValue({ customClaims: null });
+
+      await provider.setClaimsPermissionBase(uid, newClaims);
+
+      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith(uid, {
+        permissions: newClaims,
+      });
+    });
+  });
+
+  describe('setClaimsRoleBase', () => {
+    it('should treat a null customClaims value as no existing claims', async () => {
+      const uid = 'test-uid';
+      const newRoles = ['admin'];
+      mockAuth.getUser.mockResolvedValue({ customClaims: null });
+
+      await provider.setClaimsRoleBase(uid, newRoles);
+
+      expect(mockAuth.setCustomUserClaims).toHaveBeenCalledWith(uid, {
+        test: newRoles,
+      });
+    });
   });
 });

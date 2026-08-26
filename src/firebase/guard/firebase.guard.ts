@@ -42,7 +42,7 @@ export class FirebaseGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {
     this.extractor =
-      this.config.auth?.config?.extractor ?? ExtractJwt.fromAuthHeaderAsBearerToken();
+      this.config?.auth?.config?.extractor ?? ExtractJwt.fromAuthHeaderAsBearerToken();
   }
 
   /**
@@ -54,7 +54,7 @@ export class FirebaseGuard implements CanActivate {
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const authConfig = this.config.auth?.config;
+    const authConfig = this.config?.auth?.config;
 
     const token = this.extractTokenFromRequest(request);
 
@@ -117,14 +117,14 @@ export class FirebaseGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    if (!validateRole && !requiredRoles) {
+    if (!validateRole && !requiredRoles?.length) {
       return true;
     }
 
     const userRoles = await this.firebaseProvider.getClaimsRoleBase(decodedToken, useLocalRoles);
     this.attachClaimsToRequest(request, userRoles);
 
-    if (!requiredRoles) {
+    if (!requiredRoles?.length) {
       return true;
     }
 

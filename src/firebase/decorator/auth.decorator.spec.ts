@@ -60,6 +60,26 @@ describe('AuthDecorator', () => {
     expect(UseGuards).toHaveBeenCalledWith(FirebaseGuard);
   });
 
+  it('should treat null roles the same as omitted roles', () => {
+    Auth({ roles: null as any });
+    expect(UseGuards).toHaveBeenCalledWith(FirebaseGuard);
+  });
+
+  it('should treat null claims the same as omitted claims', () => {
+    Auth({ claims: null as any });
+    expect(UseGuards).toHaveBeenCalledWith(FirebaseGuard);
+  });
+
+  it('should treat null policies the same as omitted policies', () => {
+    Auth({ policies: null as any });
+    expect(UseGuards).toHaveBeenCalledWith(FirebaseGuard);
+  });
+
+  it('should behave like Auth() when every option is an empty array at once', () => {
+    Auth({ policies: [], claims: [], roles: [] });
+    expect(UseGuards).toHaveBeenCalledWith(FirebaseGuard);
+  });
+
   it('should compose roles, claims and policies together', () => {
     const policies = [new TestPolicyHandler()];
 

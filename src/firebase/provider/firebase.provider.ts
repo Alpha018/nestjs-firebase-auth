@@ -68,6 +68,26 @@ export class FirebaseProvider {
   }
 
   /**
+   * Retrieves fine-grained claims from a Firebase user, from the decoded token if
+   * `localDecode` is true, or from Firebase custom claims otherwise.
+   */
+  async getClaimsPermissionBase<T>(
+    user: DecodedIdToken,
+    localDecode: boolean,
+  ): Promise<undefined | T[]> {
+    if (localDecode) {
+      return user?.[this.claimsKey];
+    }
+
+    if (!user) {
+      return undefined;
+    }
+
+    const { customClaims } = await this.auth.getUser(user.uid);
+    return customClaims?.[this.claimsKey];
+  }
+
+  /**
    * Sets custom claims for a specific Firebase user, preserving the existing role and
    * fine-grained claims. This method merges the new claims with any existing custom claims,
    * but ensures that the role-specific (e.g., 'roles') and claims-specific (e.g., 'permissions')
@@ -87,22 +107,6 @@ export class FirebaseProvider {
   }
 
   /**
-   * Retrieves fine-grained claims from a Firebase user, from the decoded token if
-   * `localDecode` is true, or from Firebase custom claims otherwise.
-   */
-  async getClaimsPermissionBase<T>(
-    user: DecodedIdToken,
-    localDecode: boolean,
-  ): Promise<undefined | T[]> {
-    if (localDecode) {
-      return user?.[this.claimsKey];
-    }
-
-    const { customClaims } = await this.auth.getUser(user.uid);
-    return customClaims?.[this.claimsKey];
-  }
-
-  /**
    * Retrieves role-based claims from a Firebase user.
    * If `localDecode` is true, roles are retrieved from the decoded token.
    * Otherwise, it fetches roles from Firebase custom claims.
@@ -115,6 +119,10 @@ export class FirebaseProvider {
   async getClaimsRoleBase<T>(user: DecodedIdToken, localDecode: boolean): Promise<undefined | T[]> {
     if (localDecode) {
       return user?.[this.rolesKey];
+    }
+
+    if (!user) {
+      return undefined;
     }
 
     const { customClaims } = await this.auth.getUser(user.uid);

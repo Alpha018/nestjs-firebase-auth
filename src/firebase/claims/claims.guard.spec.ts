@@ -88,6 +88,55 @@ describe('ClaimsGuard', () => {
     await expect(guard.canActivate(context)).rejects.toBeInstanceOf(InsufficientClaimsException);
   });
 
+  it('should return true if reflector returns null instead of undefined', async () => {
+    reflector.getAllAndOverride.mockReturnValue(null);
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(firebaseProvider.getClaimsPermissionBase).not.toHaveBeenCalled();
+  });
+
+  it('should throw InsufficientClaimsException instead of crashing when metadata is entirely missing', async () => {
+    request.metadata = undefined;
+    reflector.getAllAndOverride.mockReturnValue(['users:read']);
+    firebaseProvider.getClaimsPermissionBase.mockResolvedValue(undefined);
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(InsufficientClaimsException);
+    expect(firebaseProvider.getClaimsPermissionBase).toHaveBeenCalledWith(undefined, false);
+  });
+
+  it('should throw InsufficientClaimsException instead of crashing when the attached user is null', async () => {
+    request.metadata[FIREBASE_TOKEN_USER_METADATA].user = null;
+    reflector.getAllAndOverride.mockReturnValue(['users:read']);
+    firebaseProvider.getClaimsPermissionBase.mockResolvedValue(undefined);
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(InsufficientClaimsException);
+    expect(firebaseProvider.getClaimsPermissionBase).toHaveBeenCalledWith(null, false);
+  });
+
+  it('should not crash when the injected config is null', async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ClaimsGuard,
+        { useClass: ReflectorMock, provide: Reflector },
+        { useClass: FirebaseProviderMock, provide: FirebaseProvider },
+        { provide: FIREBASE_ADMIN_CONFIG, useValue: null },
+      ],
+    }).compile();
+
+    const localGuard = module.get<ClaimsGuard>(ClaimsGuard);
+    const localReflector = module.get<ReflectorMock>(Reflector);
+    const localFirebaseProvider = module.get<FirebaseProviderMock>(FirebaseProvider);
+
+    localReflector.getAllAndOverride.mockReturnValue(['users:read']);
+    localFirebaseProvider.getClaimsPermissionBase.mockResolvedValue(['users:read']);
+
+    await expect(localGuard.canActivate(context)).resolves.toBe(true);
+    expect(localFirebaseProvider.getClaimsPermissionBase).toHaveBeenCalledWith(
+      { uid: 'user-1' },
+      false,
+    );
+  });
+
   it('should read useLocalRoles from the injected config', async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [

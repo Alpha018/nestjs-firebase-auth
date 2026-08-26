@@ -60,6 +60,33 @@ describe('PoliciesGuard', () => {
     await expect(guard.canActivate(context)).resolves.toBe(true);
   });
 
+  it('should return true if reflector returns null instead of undefined', async () => {
+    reflector.getAllAndOverride.mockReturnValue(null);
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(moduleRef.get).not.toHaveBeenCalled();
+  });
+
+  it('should pass an undefined user/claims context through to the handler when metadata is entirely missing', async () => {
+    request.metadata = undefined;
+    const handler: PolicyHandler = { handle: jest.fn().mockResolvedValue(undefined) };
+    reflector.getAllAndOverride.mockReturnValue([handler]);
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(handler.handle).toHaveBeenCalledWith(
+      expect.objectContaining({ claims: undefined, user: undefined, request }),
+    );
+  });
+
+  it('should pass a null user through to the handler when the attached user is explicitly null', async () => {
+    request.metadata[FIREBASE_TOKEN_USER_METADATA].user = null;
+    const handler: PolicyHandler = { handle: jest.fn().mockResolvedValue(undefined) };
+    reflector.getAllAndOverride.mockReturnValue([handler]);
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(handler.handle).toHaveBeenCalledWith(expect.objectContaining({ user: null }));
+  });
+
   it('should return true when an instance handler resolves', async () => {
     const handler: PolicyHandler = { handle: jest.fn().mockResolvedValue(undefined) };
     reflector.getAllAndOverride.mockReturnValue([handler]);

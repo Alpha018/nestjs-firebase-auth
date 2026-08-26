@@ -37,7 +37,9 @@ export class ClaimsGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.metadata?.[FIREBASE_TOKEN_USER_METADATA]?.user;
     const useLocalDecode =
-      this.config.auth?.config?.useLocalDecode ?? this.config.auth?.config?.useLocalRoles ?? false;
+      this.config?.auth?.config?.useLocalDecode ??
+      this.config?.auth?.config?.useLocalRoles ??
+      false;
     const userClaims = await this.firebaseProvider.getClaimsPermissionBase(user, useLocalDecode);
 
     const satisfied = requiredClaims.every((claim) => userClaims?.includes(claim));
