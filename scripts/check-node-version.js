@@ -15,20 +15,21 @@ function isSupported() {
 if (!isSupported()) {
   var required = REQUIRED.join('.');
   console.error(
-    '\n[31mThe e2e suite requires Node.js ' +
+    '\n[31mThe test suite requires Node.js ' +
       required +
       ' or newer. You are on ' +
       process.versions.node +
       '.[0m\n\n' +
-      'The e2e tests reach a real Firebase project, so they load google-auth-library,\n' +
-      'which performs a dynamic import() that Jest can only resolve with\n' +
-      '--experimental-vm-modules. That flag in turn makes Jest treat `jose` as ESM,\n' +
-      'which it can only require from CommonJS on Node ' +
+      '@nestjs/common, @nestjs/core, @nestjs/testing, etc. (v12) ship ESM-only, and the\n' +
+      'e2e tests additionally load google-auth-library, which performs a dynamic\n' +
+      "import(). Both require Jest's --experimental-vm-modules flag, whose synchronous\n" +
+      'vm module APIs are only available on Node ' +
       required +
       ' or newer.\n\n' +
       'This repository ships an .nvmrc, so:\n\n' +
       '    nvm use\n\n' +
-      'The unit suite (npm test) and the published library both run on Node >=22.12.\n',
+      'The published library itself still runs on Node >=22.12 — this gate only\n' +
+      'covers the Jest-based test suites (npm test / npm run test:e2e).\n',
   );
   process.exit(1);
 }
