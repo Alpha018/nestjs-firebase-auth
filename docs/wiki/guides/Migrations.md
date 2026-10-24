@@ -171,3 +171,14 @@ route() {}
 | `auth.config.useLocalRoles` | `auth.config.useLocalDecode` |
 
 `useLocalRoles` keeps working exactly as before. `useLocalDecode` does the same thing (local vs remote resolution of roles and claims), under a name that isn't tied to "roles" now that it also governs `ClaimsGuard`. If both are set, `useLocalDecode` wins.
+
+## Upgrading to NestJS v12
+
+This library now depends on `@nestjs/common`, `@nestjs/config` and `@nestjs/platform-express` **v12** instead of v11. These are regular `dependencies`, not `peerDependencies`, so npm installs its own copy for this library — if your application still runs NestJS v11, you end up with two different major versions of `@nestjs/core`/`@nestjs/common` loaded at once, which breaks dependency injection and guard/interceptor behavior in subtle ways (duplicate DI container, failed `instanceof` checks on decorators and execution context).
+
+| Change | Impact | Action required |
+|---|---|---|
+| `@nestjs/*` bumped to v12 | Mismatched NestJS major versions if your app is still on v11 | Upgrade your application to NestJS v12 before adopting this version |
+| Minimum Node.js is unchanged | None | The published library (and its CommonJS `dist/`) still runs on Node.js **22.12+** — NestJS v12's packages are ESM-only, but Node's native `require(ESM)` support (already relied on for `jose`/`firebase-admin`, see above) covers this transparently |
+
+Node.js 22.12+ is enough to **use** the published package. A higher floor (24.9+) only applies if you build this library from source and run its own Jest-based test suites — see `CLAUDE.md` in this repository.
