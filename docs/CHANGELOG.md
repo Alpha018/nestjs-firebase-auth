@@ -1,3 +1,17 @@
+# [4.0.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v3.0.0...v4.0.0) (2026-10-24)
+
+
+* feat(deps)!: upgrade NestJS to v12 ([b84040b](https://github.com/Alpha018/nestjs-firebase-auth/commit/b84040bed9aa591f01d5c84c902f5e2720b19982))
+
+
+### BREAKING CHANGES
+
+* @nestjs/common, @nestjs/config and @nestjs/platform-express
+now require NestJS v12. Applications still on NestJS v11 must upgrade first
+to avoid duplicate NestJS core instances. The unit test suite (npm test) now
+requires Node.js 24.9+, same as the e2e suite; the published library's
+runtime requirement stays at Node.js 22.12+.
+
 # [3.0.0](https://github.com/Alpha018/nestjs-firebase-auth/compare/v2.0.1...v3.0.0) (2026-08-26)
 
 
